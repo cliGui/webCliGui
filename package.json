@@ -1,0 +1,52 @@
+{
+  "name": "webcligui",
+  "version": "1.0.0",
+  "description": "Service to run tasks on multiple servers through the country, or even all the servers nationwide",
+  "type": "module",
+  "scripts": {
+    "build": "if [ -d dist ]; then rm -rf dist; fi && webpack --stats-error-details",
+    "watch": "if [ -d dist ]; then rm -rf dist; fi && webpack serve --mode development",
+    "clean": "rm -rf node_modules dist __pycache__"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cliGui/webCliGui.git"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.0",
+    "@babel/preset-env": "^7.28.0",
+    "@babel/preset-react": "^7.27.1",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.6.1",
+    "@redux-devtools/extension": "^3.3.0",
+    "@tailwindcss/postcss": "^4.1.11",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@types/react-redux": "^7.1.34",
+    "@types/react-router-dom": "^5.3.3",
+    "autoprefixer": "^10.4.21",
+    "babel-loader": "^10.0.0",
+    "copy-webpack-plugin": "^13.0.1",
+    "css-loader": "^7.1.2",
+    "file-loader": "^6.2.0",
+    "postcss": "^8.5.6",
+    "postcss-loader": "^8.1.1",
+    "postcss-preset-env": "^10.2.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-refresh": "^0.17.0",
+    "style-loader": "^4.0.0",
+    "tailwindcss": "^4.1.11",
+    "ts-loader": "^9.5.2",
+    "webpack": "^5.100.2",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-middleware": "^7.4.2",
+    "webpack-dev-server": "^5.2.2"
+  },
+  "dependencies": {
+    "bootstrap": "^5.3.8",
+    "clsx": "^2.1.1",
+    "immer": "^11.0.1",
+    "react-bootstrap": "^2.10.10",
+    "zustand": "^5.0.9"
+  }
+}
