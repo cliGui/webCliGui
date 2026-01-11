@@ -46,6 +46,7 @@
     "bootstrap": "^5.3.8",
     "clsx": "^2.1.1",
     "immer": "^11.0.1",
+    "rc-tree": "^5.13.1",
     "react-bootstrap": "^2.10.10",
     "zustand": "^5.0.9"
   }
