@@ -6,7 +6,7 @@
   "scripts": {
     "build": "if [ -d dist ]; then rm -rf dist; fi && webpack --stats-error-details",
     "watch": "if [ -d dist ]; then rm -rf dist; fi && webpack serve --mode development",
-    "clean": "rm -rf node_modules dist __pycache__"
+    "clean": "rm -rf node_modules dist; find . -name __pycache__ -type d -exec rm -rf {} +;"
   },
   "repository": {
     "type": "git",

@@ -101,7 +101,7 @@ export const handleAbort = async (get: () => AbortController,
 export interface FetchDataOptions<D, P = void> {
   setFetchStatus: (stat: FetchStatus) => void;
   setError: (err: string, errorDetail: string) => void;
-  accessToken: string;
+  accessToken?: string;
   searchParameters?: {[key: string]: string | number | undefined}[],
   setData?: (data: D) => void;
   postData?: P;
@@ -126,10 +126,12 @@ const fetchData = async <D, P = void>(url: string, options: FetchDataOptions<D, 
     const fetchOptions: RequestInit  = {
       method: options.postData ? 'POST' : 'GET',
       headers: {
-        'Authorization': `Bearer ${options.accessToken}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
+    }
+    if (options.accessToken) {
+      (fetchOptions.headers as any)['Authorization'] = `Bearer ${options.accessToken}`;
     }
     if (options.postData) {
       fetchOptions.body = JSON.stringify(options.postData);

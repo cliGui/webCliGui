@@ -15,5 +15,20 @@
       ],
       "django": true,
     },
+    {
+      "name": "Python: Register Library",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/server/manage.py",
+      "args": [ 
+        "register_library",
+        "csLib",
+        "csLib",
+        "LibraryAPIImpl",
+        "--description",
+        "Command Services Library"
+      ],
+      "django": true,
+    },
   ]
 }

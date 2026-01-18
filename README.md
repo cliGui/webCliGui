@@ -15,10 +15,9 @@ npm i
 
 ### Install the backend python modules
 
-To install the backend python modules you need to give the following commands:
+To install the backend python modules you need to have the correct Python virtual environment set up. In that environment you have to give the following commands:
 
 ```sh
-pip update
 pip install Django djangorestframework python-dotenv
 ```
 
@@ -27,6 +26,10 @@ pip install Django djangorestframework python-dotenv
 This application is developed in vscode so please open the project in the webCliGui directory in vscode and open a terminal.
 
 To run this application in development you have to start the frontend and the backend servers in development.
+
+### Install Python extension in vscode
+
+In order to run the Python Django server inside vscode you have to select the correct Python interpreter. You also have to install the Python extension from Microsoft.
 
 ### Start the backend python Django server in developer mode
 
@@ -118,3 +121,16 @@ http://<system-ip-address>:9002
 
 This should show up the application.
 
+## Registering a 3rd party library
+
+The 3rd party library has to implement the abstract class LibraryAPI as defined in webcligui_api/src/webcligui_api/library_api.py. To register that implemented class you to call 'register_library:
+
+```sh
+python manage.py register_library <library-name> <module> <class-name> --description  <Description>
+```
+
+For example:
+
+```sh
+python manage.py register_library csLib csLib LibraryAPIImpl --description  'Command Services Library'
+```

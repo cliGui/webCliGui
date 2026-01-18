@@ -55,6 +55,13 @@ export default {
       },
     ]
   },
+
+  watchOptions: {
+    ignored: /node_modules/,
+    aggregateTimeout: 300,
+    poll: 1000,
+  },
+
   devServer: {
     static: {
       directory: path.join(__dirname, './dist')
@@ -66,7 +73,7 @@ export default {
     port: 9002,
     proxy: [
       {
-        context: ['/api'],
+        context: ['/api', '/admin', '/static'],
         target: 'http://127.0.0.1:5000',
         secure: false,
         changeOrigin: true,
@@ -74,6 +81,12 @@ export default {
     ],
     devMiddleware: {
       writeToDisk: true,
+    },
+    watchFiles: {
+      paths: ['src/**/*'],
+      options: {
+        ignored: /node_modules/,
+      },
     },
   },
 
