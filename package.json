@@ -43,11 +43,13 @@
     "webpack-dev-server": "^5.2.2"
   },
   "dependencies": {
+    "@types/rc-tree": "^1.11.4",
     "bootstrap": "^5.3.8",
     "clsx": "^2.1.1",
     "immer": "^11.0.1",
     "rc-tree": "^5.13.1",
     "react-bootstrap": "^2.10.10",
+    "react-markdown": "^10.1.0",
     "zustand": "^5.0.9"
   }
 }

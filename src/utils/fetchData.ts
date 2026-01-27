@@ -80,6 +80,12 @@ export const FetchState = {
 
 export type FetchStatus = typeof FetchState[keyof typeof FetchState];
 
+export interface FetchAndError {
+  fetchStatus: FetchStatus;
+  error: string | null;
+  errorDetail: string | null;
+}
+
 export interface HandleAbortController {
   get: () => AbortController;
   set: (ctrl: AbortController | null) => void;

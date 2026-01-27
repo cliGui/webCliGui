@@ -21,6 +21,20 @@ To install the backend python modules you need to have the correct Python virtua
 pip install Django djangorestframework python-dotenv
 ```
 
+After that you have to do the migration:
+
+```sh
+cd server
+python manage.py migrate
+```
+
+You also need to install the webcligui_api package:
+
+```sh
+cd webcligui_api
+pip install -e .
+```
+
 ## Run in development
 
 This application is developed in vscode so please open the project in the webCliGui directory in vscode and open a terminal.
@@ -123,14 +137,24 @@ This should show up the application.
 
 ## Registering a 3rd party library
 
-The 3rd party library has to implement the abstract class LibraryAPI as defined in webcligui_api/src/webcligui_api/library_api.py. To register that implemented class you to call 'register_library:
+The 3rd party library has to implement the abstract class LibraryAPI as defined in webcligui_api/src/webcligui_api/library_api.py.
+
+### Create the implementation
+
+The class that you need to implement is based on the abstract class LibraryAPI in webcligui_api/src/webcligui_api/library_api.py. Best is to create your own Python package yourself, implement the class, and then run 'pip install -e' in that package.
+
+### Register your library
+
+To register your implemented class with webCliGui you have to call 'register_library:
 
 ```sh
+cd server
 python manage.py register_library <library-name> <module> <class-name> --description  <Description>
 ```
 
 For example:
 
 ```sh
+cd server
 python manage.py register_library csLib csLib LibraryAPIImpl --description  'Command Services Library'
 ```

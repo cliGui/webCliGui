@@ -6,23 +6,24 @@ const App  = () => {
   const [selectedTabKey, setSelectedTabKey] = useState('createTask');
 
   return (
-    <div className="flex flex-col">
-      <div className="p-10 max-w-[1325px]">
-        <Tabs defaultActiveKey="createTask" 
-            mountOnEnter
-            activeKey={selectedTabKey}
-            onSelect={(tab: string | null) => setSelectedTabKey(tab as string)}
-            className="mb-3 container-tabs">
+    <div className="flex flex-col p-5 pt-3 max-w-[1325px]">
 
-          <Tab eventKey="createTask" title="Create task">
-            <CreateTask />
-          </Tab>
+      <h3 className="pb-4">Web UI Command Services Executor</h3>
 
-          <Tab eventKey="status" title="Status">
-            Status
-          </Tab>
-        </Tabs>
-      </div>
+      <Tabs defaultActiveKey="createTask" 
+          mountOnEnter
+          activeKey={selectedTabKey}
+          onSelect={(tab: string | null) => setSelectedTabKey(tab as string)}
+          className="mb-3 container-tabs">
+
+        <Tab eventKey="createTask" title="Create task">
+          <CreateTask />
+        </Tab>
+
+        <Tab eventKey="status" title="Status">
+          Status
+        </Tab>
+      </Tabs>
     </div>
   );
 };

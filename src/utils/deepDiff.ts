@@ -6,7 +6,7 @@
  * @param bailOut - Bail out as soon as a difference is found
  * @param idFields - If there is a change in an object then the object is checked whether it has
  *                   one of the fields in the idFields. If so, then that field is set on the diffObj
- * @returns The differences between `orgObj` and `modObj`.
+ * @returns The differences between `orgObj` and `modObj`. Returns undefined if both are identical.
  */
 const deepDiff = (orgObj: any, modObj: any, bailOut: boolean = false, idFields: string[] | null = null): any => {
   if (modObj === orgObj) return undefined;
