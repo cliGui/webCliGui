@@ -30,8 +30,10 @@ const CreationSteps = () => {
     <div className="flex flex-row mb-4 justify-between">
       <div className="flex flex-row">
         {['Select Operation', 'Parameters', 'Servers', 'Preview'].map((itemText, idx) => {
-          const flagBodyColor = idx <= taskCreationStep ? 'bg-emerald-400' : 'bg-gray-300';
-          const flagTriangleColor = idx <= taskCreationStep ? 'border-l-emerald-400' : 'border-l-gray-300';
+          const flagBodyColor = idx < taskCreationStep ? 'bg-emerald-400' : 
+            (idx === taskCreationStep ? 'bg-blue-400' : 'bg-gray-300');
+          const flagTriangleColor = idx < taskCreationStep ? 'border-l-emerald-400' : 
+            (idx === taskCreationStep ? 'border-l-blue-400' : 'border-l-gray-300');
   
           return (
             <div key={itemText} className="flex flex-col">
@@ -51,7 +53,7 @@ const CreationSteps = () => {
 
       <div className="flex flex-row">
         <Button className="!mr-2" text="Back" 
-          onClick={onPreviousStep} disabled={taskCreationStep === TaskCreationSteps.Selection}/>
+          onClick={onPreviousStep} disabled={taskCreationStep === TaskCreationSteps.OperatorSelection}/>
         <Button text={taskCreationStep !== TaskCreationSteps.Preview ? "Next" : "Submit"}
           onClick={onNextStepOrSubmit} disabled={!isNextStepValid()} />
       </div>
@@ -296,14 +298,67 @@ const OperationParameters = ({ isVisible }: OperationParametersProps) => {
   );
 };
 
+interface SelectServersProps {
+  isVisible: boolean;
+}
+
+const SelectServers = ({
+  isVisible,
+}: SelectServersProps) => {
+  return (
+    <div className={`flex flex-col gap-3 ${!isVisible && 'invisible w-0 h-0'}`}>
+      <div className="flex items-center">
+        <input className="m-2" type="radio" name="serverSelection" id="webCliGuiServerRB" value="webCliGuiServer" checked />
+        <label htmlFor="webCliGuiServerRB"></label>WebCliGui Server
+      </div>
+      <div className="flex items-center">
+        <input className="m-2" type="radio" name="serverSelection" id="selectServersRB" value="selectServers" disabled />
+        <label htmlFor="selectServersRB" className="w-35 text-gray-300">Select Servers</label>
+        <select className="w-35 text-gray-300 border p-1" disabled>
+          <option value="">--select server--</option>
+        </select>
+        <Button text="Add" className="!h-9 px-3 py-1 !ml-4" disabled />
+      </div>
+      <div className="flex items-center">
+        <input className="m-2" type="radio" name="serverSelection" id="selectRegionsRB" value="selectRegions" disabled />
+        <label htmlFor="selectRegionsRB" className="w-35 text-gray-300">Select Cluster</label>
+        <select className="w-35 text-gray-300 border p-1" disabled>
+          <option value="">--select cluster--</option>
+        </select>
+        <Button text="Add" className="!h-9 px-3 py-1 !ml-4" disabled />
+      </div>
+      <div className="flex items-center">
+        <input className="m-2" type="radio" name="serverSelection" id="uploadServersRB" value="uploadServers" disabled />
+        <label htmlFor="uploadServersRB" className="w-35 text-gray-300">Upload servers</label>
+        <Button text="Select file" className="!h-9 px-3 py-1" disabled />
+      </div>
+    </div>
+  );
+}
+
+interface PreviewProps {
+  isVisible: boolean;
+}
+
+const Preview = ({
+  isVisible,
+}: PreviewProps) => {
+  return (
+    <div className={`flex flex-col gap-3 ${!isVisible && 'invisible w-0 h-0'}`}>
+      Preview
+    </div>
+  );
+}
+
 const CreationViews = () => {
   const { taskCreationStep } = useDataStore(state => state.createTask);
 
   return (
     <>
-      <OperationSelection isVisible={taskCreationStep === TaskCreationSteps.Selection} />
+      <OperationSelection isVisible={taskCreationStep === TaskCreationSteps.OperatorSelection} />
       <OperationParameters isVisible={taskCreationStep === TaskCreationSteps.Parameters} />
-      {taskCreationStep === TaskCreationSteps.Servers && <>Select Servers</>}
+      <SelectServers isVisible={taskCreationStep === TaskCreationSteps.ServersSelection} />
+      <Preview isVisible={taskCreationStep === TaskCreationSteps.Preview} />
     </>
   );
 };

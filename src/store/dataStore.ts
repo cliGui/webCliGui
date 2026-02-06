@@ -317,11 +317,17 @@ const doIsNextStepValid = (get: GetFunction) => {
   } = get().createTask;
 
   switch (taskCreationStep) {
-    case TaskCreationSteps.Selection:
+    case TaskCreationSteps.OperatorSelection:
       return !!selectedOperationBranch;
 
     case TaskCreationSteps.Parameters:
       return isParametersValid(get);
+
+    case TaskCreationSteps.ServersSelection:
+      return true;
+
+    case TaskCreationSteps.Preview:
+      return true;
   }
 
   return false;
@@ -409,7 +415,7 @@ export const useDataStore = create<DataStoreIf>()(
     createTask: {
       libraryFolders: [],
       taskTrees: [],
-      taskCreationStep: TaskCreationSteps.Selection,
+      taskCreationStep: TaskCreationSteps.OperatorSelection,
       selectedOperationBranch: null,
       getLibraryOperatorsFetchAndError: {
         fetchStatus: FetchState.Idle,

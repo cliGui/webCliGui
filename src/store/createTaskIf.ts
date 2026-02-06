@@ -9,9 +9,9 @@ export interface TreeNode {
 }
 
 export enum TaskCreationSteps {
-  Selection,
+  OperatorSelection,
   Parameters,
-  Servers,
+  ServersSelection,
   Preview,
 }
 
