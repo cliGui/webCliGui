@@ -265,49 +265,56 @@ const doGetSelectedOperation = (get: GetFunction): Operation | null => {
   return getOperationFromBranch(libraryFolders, operationBranch);
 };
 
-const isParameterValid = (parameter: ParameterBase) => {
-  if (!parameter.isSelected) return true;
+const getParameterStr = (parameter: ParameterBase): string | null => {
+  if (!parameter.isSelected) return "";
 
   switch (parameter.type) {
     case ParameterType.PARAMETER_OPTIONS_TO_LIST: {
       const optionsToList = parameter as ParameterOptionsToList;
-      if (optionsToList.selectedListIdx < 0) return false;
+      if (optionsToList.selectedListIdx < 0) return null;
       const parameters = optionsToList.options[optionsToList.selectedListIdx];
-      return isParameterValid(parameters);
+      const paramStr = getParameterStr(parameters);
+      if (paramStr === null) return null;
+      return `${parameter.name} ${parameters.name} ${paramStr}`;
     }
 
     case ParameterType.PARAMETER_LIST: {
       const parameterList = parameter as ParameterList;
+      let paramsStr = "";
       for (const param of parameterList.parameters) {
-        if (!isParameterValid(param)) return false;
+        const paramStr = getParameterStr(param);
+        if (paramStr === null) return null;
+        paramsStr += ` ${paramStr}`;
       }
-      return true;
+      return paramsStr;
     }
 
     case ParameterType.STRING_VALUE: {
-      const stringValue = parameter as ParameterStringValue;
-      return stringValue.value.trim().length > 0;
+      const stringParam = parameter as ParameterStringValue;
+      const stringValue = stringParam.value.trim();
+      if (stringValue.length === 0) return null;
+      return `${stringParam.name} ${stringValue}`;
     }
 
     case ParameterType.PREFERENCE: {
-      return true;
+      return parameter.name;
     }
 
     default:
-      console.error(`isParameterValid(): unknown parameterType '${parameter.type}'`);
-      return false;
+      console.error(`getParameter(): unknown parameterType '${parameter.type}'`);
+      return null;
   }
 };
 
-const isParametersValid = (get: GetFunction) => {
+const getParameters = (get: GetFunction): string | null => {
   const {
     libraryFolders,
     selectedOperationBranch,
    } = get().createTask;
   const operation = getOperationFromBranch(libraryFolders, selectedOperationBranch as string[]);
   let parameters = operation.parameters;
-  if (!parameters) return false;
-  return isParameterValid(parameters);
+  if (!parameters) return null;
+  return getParameterStr(parameters);
 };
 
 const doIsNextStepValid = (get: GetFunction) => {
@@ -321,7 +328,7 @@ const doIsNextStepValid = (get: GetFunction) => {
       return !!selectedOperationBranch;
 
     case TaskCreationSteps.Parameters:
-      return isParametersValid(get);
+      return getParameters(get) !== null;
 
     case TaskCreationSteps.ServersSelection:
       return true;
@@ -410,6 +417,14 @@ const doSetParameterValue = (parameterBranch: number[], value: ParameterValue, g
   }, false, 'setParameterValue');
 };
 
+const doGetExecuteCommand = (get: GetFunction) => {
+  const operation = doGetSelectedOperation(get);
+  if (!operation) return null;
+  const paramsStr = getParameters(get);
+  if (paramsStr === null) return null;
+  return `${operation.name} ${paramsStr}`;
+}
+
 export const useDataStore = create<DataStoreIf>()(
   devtools(immer((set, get) => ({
     createTask: {
@@ -440,6 +455,7 @@ export const useDataStore = create<DataStoreIf>()(
       setNextTaskCreationStep: (nextStep: number) => doSetNextTaskCreationStep(nextStep, get, set),
       loadParameters: async () => await doLoadParameters(get, set),
       setParameterValue: (parameterBranch: number[], value: ParameterValue) => doSetParameterValue(parameterBranch, value, get, set),
+      getExecuteCommand: () => doGetExecuteCommand(get),
     }
   })), { 
     name: 'DataStore',

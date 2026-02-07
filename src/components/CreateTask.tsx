@@ -309,7 +309,7 @@ const SelectServers = ({
     <div className={`flex flex-col gap-3 ${!isVisible && 'invisible w-0 h-0'}`}>
       <div className="flex items-center">
         <input className="m-2" type="radio" name="serverSelection" id="webCliGuiServerRB" value="webCliGuiServer" checked />
-        <label htmlFor="webCliGuiServerRB"></label>WebCliGui Server
+        <label htmlFor="webCliGuiServerRB">WebCliGui Server</label>
       </div>
       <div className="flex items-center">
         <input className="m-2" type="radio" name="serverSelection" id="selectServersRB" value="selectServers" disabled />
@@ -343,12 +343,21 @@ interface PreviewProps {
 const Preview = ({
   isVisible,
 }: PreviewProps) => {
+  const getExecuteCommand = useDataStore(store => store.createTask.getExecuteCommand);
+
+  const execCmd = getExecuteCommand();
+
   return (
     <div className={`flex flex-col gap-3 ${!isVisible && 'invisible w-0 h-0'}`}>
-      Preview
+      <h6 className="!mb-1">Command:</h6>
+      {!execCmd && <span>No command?!?!</span>}
+      {execCmd && <span>{execCmd}</span>}
+
+      <h6 className="!mt-10 !mb-1">Server(s):</h6>
+      <span>WebCliGui Server</span>
     </div>
   );
-}
+};
 
 const CreationViews = () => {
   const { taskCreationStep } = useDataStore(state => state.createTask);
