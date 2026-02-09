@@ -20,9 +20,12 @@ from bisos.b import b_io
 
 import sys
 import pathlib
+import os
+import pwd
 
 gitClonesBaseDir = "/bisos/git/bxRepos/cliGui"
 here = pathlib.Path.cwd()
+userName = pwd.getpwuid(os.getuid()).pw_name
 
 djangoProc_seedInfo.setup(
     examplesFuncsList=[lambda: examples_spcs(),],  # lambda is for forward reference
@@ -50,6 +53,11 @@ def examples_spcs() -> None:
     cs.examples.menuSection(f'*Register csLib*')
     literal(f"manage.py register_library csLib csLib LibraryAPIImpl --description  'Command Services Library'")
 
+    cs.examples.menuSection(f'*Virtual Domain Deployment Preparations*')
+    literal(f"sudo chown {userName}:www-data .")  # Make the current directory writable by www-data
+    literal(f"sudo chown {userName}:www-data ./db.sqlite3")  # Make the database file writable by www-data
+
+
     cs.examples.menuSection(f'*Planted Commands*')
     cmnd('dotEnv')
     literal("cat .env")
@@ -73,6 +81,8 @@ class bxDjango_fullUpdate(cs.Cmnd):
 (pushd {gitClonesBaseDir}/webCliGui/webcligui_api && pip install -e .)
 (pushd {gitClonesBaseDir}/csLib && pip install -e .)
 # pushd {here}
+sudo chown {userName}:www-data .
+sudo chown {userName}:www-data ./db.sqlite3
 manage.py migrate   # Setup the data base
 manage.py collectstatic # Needed for admin page etc
 manage.py superuserCreate --username bystar --email bystar@example.com --password=bxDjango
