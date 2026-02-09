@@ -55,7 +55,9 @@ def examples_spcs() -> None:
 
     cs.examples.menuSection(f'*Virtual Domain Deployment Preparations*')
     literal(f"sudo chown {userName}:www-data .")  # Make the current directory writable by www-data
+    literal(f"sudo chmod g+w .")  # Make the database file writable by group
     literal(f"sudo chown {userName}:www-data ./db.sqlite3")  # Make the database file writable by www-data
+    literal(f"sudo chmod g+w ./db.sqlite3")  # Make the database file writable by group
 
 
     cs.examples.menuSection(f'*Planted Commands*')
@@ -82,7 +84,9 @@ class bxDjango_fullUpdate(cs.Cmnd):
 (pushd {gitClonesBaseDir}/csLib && pip install -e .)
 # pushd {here}
 sudo chown {userName}:www-data .
+sudo chmod g+w .
 sudo chown {userName}:www-data ./db.sqlite3
+sudo chmod g+w ./db.sqlite3
 manage.py migrate   # Setup the data base
 manage.py collectstatic # Needed for admin page etc
 manage.py superuserCreate --username bystar --email bystar@example.com --password=bxDjango
