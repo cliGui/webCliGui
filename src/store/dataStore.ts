@@ -6,7 +6,7 @@ import fetchData, { FetchState, FetchStatus } from '../utils/fetchData';
 import deepDiff from '../utils/deepDiff';
 import {GetFunctionType, SetFunctionType} from './dataStoreTypes';
 import { DataStoreIf } from './dataStoreIf';
-import { TaskCreationSteps, TreeNode } from './createTaskIf';
+import { TaskCreationSteps, TreeNode, WEB_CLI_GUI_SERVER } from './createTaskIf';
 import { OperationBase, Operation, OperationType, OperationFolder } from './operationTypes';
 import { ParameterType, ParameterValue, ParameterBase, ParameterPreference, 
   ParameterStringValue, ParameterList, ParameterOptionsToList, ParameterData,
@@ -265,39 +265,39 @@ const doGetSelectedOperation = (get: GetFunction): Operation | null => {
   return getOperationFromBranch(libraryFolders, operationBranch);
 };
 
-const getParameterStr = (parameter: ParameterBase): string | null => {
-  if (!parameter.isSelected) return "";
+const getParameterArray = (parameter: ParameterBase): string[] | null => {
+  if (!parameter.isSelected) return [];
 
   switch (parameter.type) {
     case ParameterType.PARAMETER_OPTIONS_TO_LIST: {
       const optionsToList = parameter as ParameterOptionsToList;
       if (optionsToList.selectedListIdx < 0) return null;
       const parameters = optionsToList.options[optionsToList.selectedListIdx];
-      const paramStr = getParameterStr(parameters);
-      if (paramStr === null) return null;
-      return `${parameter.name} ${parameters.name} ${paramStr}`;
+      const params = getParameterArray(parameters);
+      if (params === null) return null;
+      return [parameter.name, parameters.name, ...params];
     }
 
     case ParameterType.PARAMETER_LIST: {
       const parameterList = parameter as ParameterList;
-      let paramsStr = "";
+      let params: string[] = [];
       for (const param of parameterList.parameters) {
-        const paramStr = getParameterStr(param);
-        if (paramStr === null) return null;
-        paramsStr += ` ${paramStr}`;
+        const paramArr = getParameterArray(param);
+        if (paramArr === null) return null;
+        params = params.concat(paramArr);
       }
-      return paramsStr;
+      return params;
     }
 
     case ParameterType.STRING_VALUE: {
       const stringParam = parameter as ParameterStringValue;
       const stringValue = stringParam.value.trim();
       if (stringValue.length === 0) return null;
-      return `${stringParam.name} ${stringValue}`;
+      return stringParam.name.length > 0 ? [stringParam.name, stringValue] : [stringValue];
     }
 
     case ParameterType.PREFERENCE: {
-      return parameter.name;
+      return [parameter.name];
     }
 
     default:
@@ -306,7 +306,7 @@ const getParameterStr = (parameter: ParameterBase): string | null => {
   }
 };
 
-const getParameters = (get: GetFunction): string | null => {
+const getParameters = (get: GetFunction): string[] | null => {
   const {
     libraryFolders,
     selectedOperationBranch,
@@ -314,7 +314,7 @@ const getParameters = (get: GetFunction): string | null => {
   const operation = getOperationFromBranch(libraryFolders, selectedOperationBranch as string[]);
   let parameters = operation.parameters;
   if (!parameters) return null;
-  return getParameterStr(parameters);
+  return getParameterArray(parameters);
 };
 
 const doIsNextStepValid = (get: GetFunction) => {
@@ -334,7 +334,7 @@ const doIsNextStepValid = (get: GetFunction) => {
       return true;
 
     case TaskCreationSteps.Preview:
-      return true;
+      return get().createTask.submitOperationFetchAndError.fetchStatus !== FetchState.Loading;
   }
 
   return false;
@@ -420,9 +420,37 @@ const doSetParameterValue = (parameterBranch: number[], value: ParameterValue, g
 const doGetExecuteCommand = (get: GetFunction) => {
   const operation = doGetSelectedOperation(get);
   if (!operation) return null;
-  const paramsStr = getParameters(get);
-  if (paramsStr === null) return null;
-  return `${operation.name} ${paramsStr}`;
+  const params = getParameters(get);
+  if (params === null) return null;
+  return [operation.name, ...params];
+}
+
+const doSubmitOperation = async (get: GetFunction, set: SetFunction) => {
+  const cmd = doGetExecuteCommand(get) as string[];
+
+  const setFetchStatus = (stat: FetchStatus) => 
+  set(state => { state.createTask.submitOperationFetchAndError.fetchStatus = stat; }, 
+    false, 'submitOperationFetchStatus');
+
+  const setError = (err: string, errorDetail: string) => 
+    set(state => { 
+        state.createTask.submitOperationFetchAndError.error = err; 
+        state.createTask.submitOperationFetchAndError.errorDetail = errorDetail;
+      }, false, 'submitOperationError');
+
+  interface SubmitOperation {
+    command: string[];
+    servers: string[];
+  }
+
+  return await fetchData<string, SubmitOperation>(
+    '/api/submit-operation',
+    {
+      postData: { command: cmd, servers: [WEB_CLI_GUI_SERVER] },
+      setFetchStatus,
+      setError,
+    }
+  );
 }
 
 export const useDataStore = create<DataStoreIf>()(
@@ -447,6 +475,11 @@ export const useDataStore = create<DataStoreIf>()(
         error: null,
         errorDetail: null,
       },
+      submitOperationFetchAndError: {
+        fetchStatus: FetchState.Idle,
+        error: null,
+        errorDetail: null,
+      },
 
       getLibraryOperators: async () => await doGetLibraryOperators(get, set),
       setSelectedOperation: async (operationPos: string) => await doSetSelectedOperation(operationPos, get, set),
@@ -456,6 +489,7 @@ export const useDataStore = create<DataStoreIf>()(
       loadParameters: async () => await doLoadParameters(get, set),
       setParameterValue: (parameterBranch: number[], value: ParameterValue) => doSetParameterValue(parameterBranch, value, get, set),
       getExecuteCommand: () => doGetExecuteCommand(get),
+      submitOperation: () => doSubmitOperation(get, set),
     }
   })), { 
     name: 'DataStore',

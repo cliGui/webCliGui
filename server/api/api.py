@@ -2,7 +2,8 @@ from enum import Enum
 from dataclasses import asdict
 import importlib
 import json
-from django.http import JsonResponse, HttpResponseBadRequest
+import subprocess
+from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest, HttpResponseServerError
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import LibraryRegistration
@@ -93,3 +94,22 @@ def get_parameters(request):
   parameters = to_json_safe(asdict(parameterData))
 
   return JsonResponse(parameters, safe=False)
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def submit_operation(request):
+  body = json.loads(request.body)
+  command = body['command']
+  servers = body["servers"]
+
+  print('command:', command, 'servers:', servers)
+  fullCommand = command + ['localhost']
+  print('fullCommand:', fullCommand)
+  try:
+     subprocess.run(fullCommand, check=True)
+  except Exception as exc:
+     print('Exception:', exc)
+     return HttpResponseServerError(str(exc));
+
+  return HttpResponse('OK')

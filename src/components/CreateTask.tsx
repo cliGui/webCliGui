@@ -5,7 +5,7 @@ import { Operation, } from '../store/operationTypes';
 import {
   ParameterBase, ParameterOptionsToList, ParameterPreference, ParameterStringValue, ParameterType,
 } from '../store/parameterTypes';
-import { TaskCreationSteps } from "../store/createTaskIf";
+import { TaskCreationSteps, WEB_CLI_GUI_SERVER } from "../store/createTaskIf";
 import { useDataStore } from "../store/dataStore";
 import Button from "./Button";
 import { FetchState } from "../utils/fetchData";
@@ -16,11 +16,14 @@ const CreationSteps = () => {
     taskCreationStep,
     isNextStepValid,
     setNextTaskCreationStep,
+    submitOperation,
    } = useDataStore(state => state.createTask);
 
   const onNextStepOrSubmit = () => {
     if (taskCreationStep !== TaskCreationSteps.Preview) {
       setNextTaskCreationStep(taskCreationStep + 1);
+    } else {
+      submitOperation();
     }
   };
 
@@ -309,7 +312,7 @@ const SelectServers = ({
     <div className={`flex flex-col gap-3 ${!isVisible && 'invisible w-0 h-0'}`}>
       <div className="flex items-center">
         <input className="m-2" type="radio" name="serverSelection" id="webCliGuiServerRB" value="webCliGuiServer" checked />
-        <label htmlFor="webCliGuiServerRB">WebCliGui Server</label>
+        <label htmlFor="webCliGuiServerRB">{WEB_CLI_GUI_SERVER}</label>
       </div>
       <div className="flex items-center">
         <input className="m-2" type="radio" name="serverSelection" id="selectServersRB" value="selectServers" disabled />
@@ -348,12 +351,12 @@ const Preview = ({
   const execCmd = getExecuteCommand();
 
   return (
-    <div className={`flex flex-col gap-3 ${!isVisible && 'invisible w-0 h-0'}`}>
-      <h6 className="!mb-1">Command:</h6>
+    <div className={`flex flex-col ${!isVisible && 'invisible w-0 h-0'}`}>
+      <h6>Command:</h6>
       {!execCmd && <span>No command?!?!</span>}
-      {execCmd && <span>{execCmd}</span>}
+      {execCmd && <span>{execCmd.join(' ')}</span>}
 
-      <h6 className="!mt-10 !mb-1">Server(s):</h6>
+      <h6 className="!mt-7">Server(s):</h6>
       <span>WebCliGui Server</span>
     </div>
   );

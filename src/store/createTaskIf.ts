@@ -15,6 +15,8 @@ export enum TaskCreationSteps {
   Preview,
 }
 
+export const WEB_CLI_GUI_SERVER = 'WebCliGui Server';
+
 export interface CreateTaskIf {
   libraryFolders: OperationFolder[];
   taskTrees: TreeNode[];
@@ -23,6 +25,7 @@ export interface CreateTaskIf {
   getLibraryOperatorsFetchAndError: FetchAndError;
   getDescriptionFetchAndError: FetchAndError;
   loadParametersFetchAndError: FetchAndError;
+  submitOperationFetchAndError: FetchAndError;
 
   getLibraryOperators: () => Promise<FetchStatus>;
   setSelectedOperation: (operationPos: string) => Promise<FetchStatus>;
@@ -31,5 +34,6 @@ export interface CreateTaskIf {
   setNextTaskCreationStep: (nextStep: number) => void;
   loadParameters: () => Promise<FetchStatus>;
   setParameterValue: (parameterBranch: number[], value: ParameterValue) => void;
-  getExecuteCommand: () => string | null;
+  getExecuteCommand: () => string[] | null;
+  submitOperation: () => void;
 }
