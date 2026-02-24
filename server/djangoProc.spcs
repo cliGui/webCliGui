@@ -52,6 +52,12 @@ def examples_spcs() -> None:
 
     cs.examples.menuSection(f'*Register csLib*')
     literal(f"manage.py register_library csLib csLib LibraryAPIImpl --description  'Command Services Library'")
+    literal(f"manage.py register_library static  bisos.csPlayer.drf_csPlayer_static LibraryAPIImpl --description  'A Static CSXU Library For Testing'")
+    literal(f"manage.py register_library pip:bisos3  bisos.csPlayer.drf_csPlayer_pipBisos3 LibraryAPIImpl --description  'pip bisos3 CSXUs'")
+    literal(f"manage.py register_library pip:dev-bisos3  bisos.csPlayer.drf_csPlayer_pipDevBisos3 LibraryAPIImpl --description  'pip dev-bisos3 CSXUs'")
+    literal(f"manage.py register_library pipx  bisos.csPlayer.drf_csPlayer_pipx LibraryAPIImpl --description  'pipx Packages and CSXUs'")
+    literal(f"manage.py register_library modules:facter  bisos.csPlayer.drf_modPlayer_facter LibraryAPIImpl --description  'CSXU Modules for facterModule.cs'")
+    literal(f"manage.py register_library modules:soncli  bisos.csPlayer.drf_modPlayer_soncli LibraryAPIImpl --description  'Uploadable Modules for soncli.cs'")
 
     cs.examples.menuSection(f'*Virtual Domain Deployment Preparations*')
     literal(f"sudo chown {userName}:www-data .")  # Make the current directory writable by www-data
@@ -66,6 +72,8 @@ def examples_spcs() -> None:
     cmnd('dotEnv', wrapper="rm .env ; ", comment="# Create .env with DEBUG_FLAG=True for development")
     cmnd('bxDjango_report')
     cmnd('bxDjango_fullUpdate')
+    literal(f"(pushd {gitClonesBaseDir}/webCliGui/webcligui_api && pip install -e .)")
+    literal(f"(pushd {gitClonesBaseDir}/csLib && pip install -e .)")
 
 class bxDjango_fullUpdate(cs.Cmnd):
     cmndParamsMandatory = [ ]

@@ -35,5 +35,5 @@ export interface CreateTaskIf {
   loadParameters: () => Promise<FetchStatus>;
   setParameterValue: (parameterBranch: number[], value: ParameterValue) => void;
   getExecuteCommand: () => string[] | null;
-  submitOperation: () => void;
+  submitOperation: (operationPos: string) => Promise<FetchStatus>;
 }
