@@ -70,11 +70,11 @@ export default {
     historyApiFallback: true,
     hot: true,
     host: "0.0.0.0",
-    port: 9002,
+    port: 25002,
     proxy: [
       {
         context: ['/api', '/admin', '/static'],
-        target: 'http://127.0.0.1:5000',
+        target: 'http://127.0.0.1:23501',
         secure: false,
         changeOrigin: true,
       }
