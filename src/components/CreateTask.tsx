@@ -11,7 +11,11 @@ import Button from "./Button";
 import { FetchState } from "../utils/fetchData";
 import WaitCircle from "./WaitCircle";
 
-const CreationSteps = () => {
+interface CreationStepsProps {
+  operationPos: string | null;
+}
+
+const CreationSteps = ({ operationPos }: CreationStepsProps) => {
   const { 
     taskCreationStep,
     isNextStepValid,
@@ -23,7 +27,9 @@ const CreationSteps = () => {
     if (taskCreationStep !== TaskCreationSteps.Preview) {
       setNextTaskCreationStep(taskCreationStep + 1);
     } else {
-      submitOperation();
+      if (operationPos) {
+        submitOperation(operationPos);
+      }
     }
   };
 
@@ -66,9 +72,10 @@ const CreationSteps = () => {
 
 interface OperationSelectionProps {
   isVisible: boolean;
+  onSelectOperation: (pos: string) => void;
 }
 
-const OperationSelection = ({ isVisible }: OperationSelectionProps) => {
+const OperationSelection = ({ isVisible, onSelectOperation }: OperationSelectionProps) => {
   const {
     taskTrees,
     selectedOperationBranch,
@@ -78,7 +85,9 @@ const OperationSelection = ({ isVisible }: OperationSelectionProps) => {
   } = useDataStore(state => state.createTask);
 
   const onSelect = (selectedKeys: React.Key[], selectData: any) => {
-    setSelectedOperation(selectData.node.pos);
+    const pos = selectData.node.pos;
+    onSelectOperation(pos);
+    setSelectedOperation(pos);
   };
 
   let selectedOperation: Operation | null = null;
@@ -362,12 +371,17 @@ const Preview = ({
   );
 };
 
-const CreationViews = () => {
+interface CreationViewsProps {
+  operationPos: string | null;
+  setOperationPos: (pos: string) => void;
+}
+
+const CreationViews = ({ operationPos, setOperationPos }: CreationViewsProps) => {
   const { taskCreationStep } = useDataStore(state => state.createTask);
 
   return (
     <>
-      <OperationSelection isVisible={taskCreationStep === TaskCreationSteps.OperatorSelection} />
+      <OperationSelection isVisible={taskCreationStep === TaskCreationSteps.OperatorSelection} onSelectOperation={setOperationPos} />
       <OperationParameters isVisible={taskCreationStep === TaskCreationSteps.Parameters} />
       <SelectServers isVisible={taskCreationStep === TaskCreationSteps.ServersSelection} />
       <Preview isVisible={taskCreationStep === TaskCreationSteps.Preview} />
@@ -376,7 +390,8 @@ const CreationViews = () => {
 };
 
 const CreateTask = () => {
-const { getLibraryOperators } = useDataStore(state => state.createTask);
+  const { getLibraryOperators } = useDataStore(state => state.createTask);
+  const [operationPos, setOperationPos] = React.useState<string | null>(null);
 
   useEffect(() => {
     getLibraryOperators();
@@ -384,8 +399,8 @@ const { getLibraryOperators } = useDataStore(state => state.createTask);
 
   return (
     <div className="flex flex-col">
-      <CreationSteps />
-      <CreationViews />
+      <CreationSteps operationPos={operationPos} />
+      <CreationViews operationPos={operationPos} setOperationPos={setOperationPos} />
     </div>
   );
 };

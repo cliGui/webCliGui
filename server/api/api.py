@@ -7,7 +7,7 @@ from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest, Http
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import LibraryRegistration
-from webcligui_api import ParameterList, ParameterOptionsToList, ParameterPreference, ParameterStringValue
+# from webcligui_api import ParameterList, ParameterOptionsToList, ParameterPreference, ParameterStringValue
 
 libraryApis = []
 library2Idx = {}
@@ -15,6 +15,7 @@ library2Idx = {}
 def instantiateLibraryModule(obj):
     module = importlib.import_module(obj.module_path)
     cls = getattr(module, obj.class_name)
+    print(f"api.py-- cls={cls} obj={obj} class_name={obj.class_name} module={module} ")
     libraryAPIImpl = cls()
     return libraryAPIImpl
 
@@ -24,9 +25,11 @@ def load_library_apis():
       return
 
   for idx, obj in enumerate(LibraryRegistration.objects.all()):
+    print(f"api.py-- idx={idx} obj={obj} name={obj.library_name} module={obj.module_path} ")
     libraryAPIImpl = instantiateLibraryModule(obj)
     libraryApis.append(libraryAPIImpl)  
     library2Idx[obj.library_name] = idx
+    # library2Idx[obj.module_path] = idx
 
 def to_json_safe(obj):
     if isinstance(obj, Enum):
@@ -69,7 +72,7 @@ def get_description(request):
   libraryApiImpl = getLibraryApi(libraryName)
   if not libraryApiImpl:
     errMsg = f'Libraryname "{libraryName}" not known!'
-    print('get_description():', errMsg)
+    print('api.py--get_description():', errMsg)
     return HttpResponseBadRequest(errMsg)
 
   operationBranch = body["operationBranch"][1:]
@@ -84,9 +87,10 @@ def get_parameters(request):
   body = json.loads(request.body)
   libraryName = body["operationBranch"][0]
   libraryApiImpl = getLibraryApi(libraryName)
+  print(f"api.py--get_parameters(): libraryName={libraryName}")
   if not libraryApiImpl:
     errMsg = f'Libraryname "{libraryName}" not known!'
-    print('get_parameters():', errMsg)
+    print('api.py--get_parameters():', errMsg)
     return HttpResponseBadRequest(errMsg)
 
   operationBranch = body["operationBranch"][1:]
@@ -100,16 +104,20 @@ def get_parameters(request):
 @permission_classes([AllowAny])
 def submit_operation(request):
   body = json.loads(request.body)
+  libraryName = body["operationBranch"][0]
+  libraryApiImpl = getLibraryApi(libraryName)
+  if not libraryApiImpl:
+    errMsg = f'Libraryname "{libraryName}" not known!'
+    print('api.py--submit_operation():', errMsg)
+    return HttpResponseBadRequest(errMsg)
+
+  operationBranch = body["operationBranch"][1:]
   command = body['command']
   servers = body["servers"]
+  
+  print(f"api.py--submit_operation(): libraryName={libraryName}, operationBranch={operationBranch}")
+  print(f"command={command}, servers={servers}")
+  
+  result = libraryApiImpl.submitOperation(body['operationBranch'], command, servers)
 
-  print('command:', command, 'servers:', servers)
-  fullCommand = command + ['localhost']
-  print('fullCommand:', fullCommand)
-  try:
-     subprocess.run(fullCommand, check=True)
-  except Exception as exc:
-     print('Exception:', exc)
-     return HttpResponseServerError(str(exc));
-
-  return HttpResponse('OK')
+  return JsonResponse(result, safe=False)

@@ -425,8 +425,13 @@ const doGetExecuteCommand = (get: GetFunction) => {
   return [operation.name, ...params];
 }
 
-const doSubmitOperation = async (get: GetFunction, set: SetFunction) => {
+const doSubmitOperation = async (operationPos: string, get: GetFunction, set: SetFunction) => {
   const cmd = doGetExecuteCommand(get) as string[];
+
+  const operationBranch = getOperationBranch(operationPos, get().createTask.taskTrees);
+  if (!operationBranch) {
+    return FetchState.Idle;
+  }
 
   const setFetchStatus = (stat: FetchStatus) => 
   set(state => { state.createTask.submitOperationFetchAndError.fetchStatus = stat; }, 
@@ -439,6 +444,7 @@ const doSubmitOperation = async (get: GetFunction, set: SetFunction) => {
       }, false, 'submitOperationError');
 
   interface SubmitOperation {
+    operationBranch: string[];
     command: string[];
     servers: string[];
   }
@@ -446,7 +452,7 @@ const doSubmitOperation = async (get: GetFunction, set: SetFunction) => {
   return await fetchData<string, SubmitOperation>(
     '/api/submit-operation',
     {
-      postData: { command: cmd, servers: [WEB_CLI_GUI_SERVER] },
+      postData: { operationBranch: operationBranch, command: cmd, servers: [WEB_CLI_GUI_SERVER] },
       setFetchStatus,
       setError,
     }
@@ -489,7 +495,7 @@ export const useDataStore = create<DataStoreIf>()(
       loadParameters: async () => await doLoadParameters(get, set),
       setParameterValue: (parameterBranch: number[], value: ParameterValue) => doSetParameterValue(parameterBranch, value, get, set),
       getExecuteCommand: () => doGetExecuteCommand(get),
-      submitOperation: () => doSubmitOperation(get, set),
+      submitOperation: (operationPos: string) => doSubmitOperation(operationPos, get, set),
     }
   })), { 
     name: 'DataStore',
