@@ -5,9 +5,8 @@ import json
 import subprocess
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest, HttpResponseServerError
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny
 from .models import LibraryRegistration
-from webcligui_api import ParameterList, ParameterOptionsToList, ParameterPreference, ParameterStringValue
 
 libraryApis = []
 library2Idx = {}
@@ -100,10 +99,11 @@ def get_parameters(request):
 @permission_classes([AllowAny])
 def submit_operation(request):
   body = json.loads(request.body)
+  operationBranch = body['operationBranch']
   command = body['command']
   servers = body["servers"]
 
-  print('command:', command, 'servers:', servers)
+  print('operationBranch:', operationBranch, 'command:', command, 'servers:', servers)
   fullCommand = command + ['localhost']
   print('fullCommand:', fullCommand)
   try:

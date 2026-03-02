@@ -1,5 +1,5 @@
 import { FetchStatus, FetchAndError } from "../utils/fetchData";
-import { Operation, OperationFolder } from "./operationTypes";
+import { Operation, OperationFolder, OperationType } from "./operationTypes";
 import { ParameterValue } from "./parameterTypes";
 
 export interface TreeNode {
@@ -19,8 +19,10 @@ export const WEB_CLI_GUI_SERVER = 'WebCliGui Server';
 
 export interface CreateTaskIf {
   libraryFolders: OperationFolder[];
+  filteredLibraryFolders: OperationFolder[]; 
   taskTrees: TreeNode[];
   taskCreationStep: TaskCreationSteps;
+  selectedOperationType: OperationType;
   selectedOperationBranch: string[] | null;
   getLibraryOperatorsFetchAndError: FetchAndError;
   getDescriptionFetchAndError: FetchAndError;
@@ -28,6 +30,7 @@ export interface CreateTaskIf {
   submitOperationFetchAndError: FetchAndError;
 
   getLibraryOperators: () => Promise<FetchStatus>;
+  setSelectedOperationType: (operationType: OperationType) => void;
   setSelectedOperation: (operationPos: string) => Promise<FetchStatus>;
   getSelectedOperation: () => Operation | null;
   isNextStepValid: () => boolean;

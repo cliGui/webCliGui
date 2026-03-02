@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import Tree from 'rc-tree';
 import Markdown from 'react-markdown';
-import { Operation, } from '../store/operationTypes';
+import { Operation, OperationType, } from '../store/operationTypes';
 import {
   ParameterBase, ParameterOptionsToList, ParameterPreference, ParameterStringValue, ParameterType,
 } from '../store/parameterTypes';
@@ -70,6 +70,8 @@ interface OperationSelectionProps {
 
 const OperationSelection = ({ isVisible }: OperationSelectionProps) => {
   const {
+    selectedOperationType,
+    setSelectedOperationType,
     taskTrees,
     selectedOperationBranch,
     getLibraryOperatorsFetchAndError,
@@ -91,8 +93,17 @@ const OperationSelection = ({ isVisible }: OperationSelectionProps) => {
     <div className={`flex flex-row ${!isVisible && 'invisible w-0 h-0'}`}>
       <div className="flex flex-col w-40" >
         <h4>Operations</h4>
+        <label htmlFor="operationTypeSelector">Operation Type:</label>
+        <select id="operationTypeSelector" value={selectedOperationType}
+                className="border-1 !mr-4 !mb-4"
+                onChange={evt => setSelectedOperationType(evt.target.value as OperationType)}>
+          <option value={OperationType.Pipx}>Pipx</option>
+          <option value={OperationType.Module}>Son Module</option>
+        </select>
         {getLibraryOperatorsFetchAndError.fetchStatus === FetchState.Loading && <WaitCircle />}
-        <Tree treeData={taskTrees} showLine onSelect={onSelect}/>
+        {taskTrees.length > 0 && <Tree treeData={taskTrees} showLine onSelect={onSelect}/>}
+        {taskTrees.length === 0 && getLibraryOperatorsFetchAndError.fetchStatus !== FetchState.Loading &&
+          <span>No operations for this operation type</span>}
       </div>
       <div>
         {!!selectedOperation?.description && 
@@ -201,8 +212,7 @@ const ParameterOptionsToListComponent = ({
       </label>
       <select id={`optionsToList-${parameterOptionsToList.name}`}
         className="border-1 h-8 disabled:border-gray-300 disabled:text-gray-300"
-        value={parameterOptionsToList.selectedListIdx /* >= 0 ?
-          parameterOptionsToList.options[parameterOptionsToList.selectedListIdx].name : "" */}
+        value={parameterOptionsToList.selectedListIdx}
         onChange={evt => {
             const idx = parseInt(evt.target.value);
             setParameterValue(parameterBranch, idx);
@@ -346,18 +356,25 @@ interface PreviewProps {
 const Preview = ({
   isVisible,
 }: PreviewProps) => {
-  const getExecuteCommand = useDataStore(store => store.createTask.getExecuteCommand);
+  const {
+    getExecuteCommand,
+    submitOperationFetchAndError,
+  } = useDataStore(store => store.createTask);
 
   const execCmd = getExecuteCommand();
 
   return (
-    <div className={`flex flex-col ${!isVisible && 'invisible w-0 h-0'}`}>
-      <h6>Command:</h6>
-      {!execCmd && <span>No command?!?!</span>}
-      {execCmd && <span>{execCmd.join(' ')}</span>}
+    <div className={`flex flex-row ${!isVisible && 'invisible w-0 h-0'}`}>
+      <div className="flex flex-col w-[500px]">
+        <h6>Command:</h6>
+        {!execCmd && <span>No command?!?!</span>}
+        {execCmd && <span>{execCmd.join(' ')}</span>}
 
-      <h6 className="!mt-7">Server(s):</h6>
-      <span>WebCliGui Server</span>
+        <h6 className="!mt-7">Server(s):</h6>
+        <span>WebCliGui Server</span>
+      </div>
+
+      {submitOperationFetchAndError.fetchStatus === FetchState.Loading && <WaitCircle />}
     </div>
   );
 };

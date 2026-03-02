@@ -77,6 +77,54 @@ const loadTaskTree = (folder: OperationFolder, parentKey?: string): TreeNode => 
   return treeFolder;
 };
 
+const filterLibraryFolder = (folder: OperationFolder, operationType: OperationType): OperationFolder | null => {
+  const filteredFolder: OperationFolder = {
+    name: folder.name,
+    portfolio: [],
+  };
+
+  folder.portfolio.forEach(item => {
+    if ('portfolio' in item) {
+      const subFolder = filterLibraryFolder(item as OperationFolder, operationType);
+      if (subFolder) {
+        filteredFolder.portfolio.push(subFolder);
+      }
+    } else {
+      const operation = item as Operation;
+      if (operation.operationType === operationType) {
+        filteredFolder.portfolio.push(operation);
+      }
+    }
+  });
+
+  if (filteredFolder.portfolio.length === 0) {
+    return null;
+  }
+
+  return filteredFolder;
+}
+
+const getFilterLibraryFolders = (get: GetFunction, set: SetFunction) => {
+  const libraryFolders = get().createTask.libraryFolders;
+  const operationType = get().createTask.selectedOperationType;
+  const filteredLibraryFolders: OperationFolder[] = [];
+  const taskTrees: TreeNode[] = [];
+
+  libraryFolders.forEach(folder => {
+    const filteredFolder = filterLibraryFolder(folder, operationType);
+    if (!filteredFolder) return;
+
+    filteredLibraryFolders.push(filteredFolder);
+    const taskTree: TreeNode = loadTaskTree(filteredFolder);
+    taskTrees.push(taskTree);
+  });
+
+  set(state => { 
+    state.createTask.filteredLibraryFolders = filteredLibraryFolders;
+    state.createTask.taskTrees = taskTrees; 
+  }, false, 'getFilteredLibraryOperators');
+}
+
 const doGetLibraryOperators = async (get: GetFunction, set: SetFunction) => {
   if (get().createTask.getLibraryOperatorsFetchAndError.fetchStatus !== FetchState.Idle) {
     return FetchState.Idle;
@@ -88,19 +136,16 @@ const doGetLibraryOperators = async (get: GetFunction, set: SetFunction) => {
 
   const setData = (data: OperationFolderRaw[]) => {
     const libraryFolders: OperationFolder[] = [];
-    const taskTrees: TreeNode[] = [];
     data.forEach((folder) => {
       const operationFolder: OperationFolder = loadOperationFolder(folder);
       libraryFolders.push(operationFolder);
-
-      const taskTree: TreeNode = loadTaskTree(operationFolder);
-      taskTrees.push(taskTree);
     });
 
     set(state => { 
       state.createTask.libraryFolders = libraryFolders; 
-      state.createTask.taskTrees = taskTrees;
     }, false, 'getLibraryOperators');
+
+    getFilterLibraryFolders(get, set);
   };
 
   const setError = (err: string, errorDetail: string) => 
@@ -148,6 +193,15 @@ const getOperationFromBranch = (libraryFolders: OperationFolder[], operationBran
   }, null);
 
   return operation;
+};
+
+const doSetSelectedOperationType = (operationType: OperationType, get: GetFunction, set: SetFunction) => {
+  set(state => {
+    state.createTask.selectedOperationType = operationType;
+    state.createTask.selectedOperationBranch = null;
+  }, false, "setSelectedOperationType");
+
+  getFilterLibraryFolders(get, set);
 };
 
 const doSetSelectedOperation = async (operationPos: string, get: GetFunction, set: SetFunction) => {
@@ -426,6 +480,7 @@ const doGetExecuteCommand = (get: GetFunction) => {
 }
 
 const doSubmitOperation = async (get: GetFunction, set: SetFunction) => {
+  const operationBranch = get().createTask.selectedOperationBranch as string[];
   const cmd = doGetExecuteCommand(get) as string[];
 
   const setFetchStatus = (stat: FetchStatus) => 
@@ -439,6 +494,7 @@ const doSubmitOperation = async (get: GetFunction, set: SetFunction) => {
       }, false, 'submitOperationError');
 
   interface SubmitOperation {
+    operationBranch: string[];
     command: string[];
     servers: string[];
   }
@@ -446,7 +502,7 @@ const doSubmitOperation = async (get: GetFunction, set: SetFunction) => {
   return await fetchData<string, SubmitOperation>(
     '/api/submit-operation',
     {
-      postData: { command: cmd, servers: [WEB_CLI_GUI_SERVER] },
+      postData: { operationBranch: operationBranch, command: cmd, servers: [WEB_CLI_GUI_SERVER] },
       setFetchStatus,
       setError,
     }
@@ -457,8 +513,10 @@ export const useDataStore = create<DataStoreIf>()(
   devtools(immer((set, get) => ({
     createTask: {
       libraryFolders: [],
+      filteredLibraryFolders: [],
       taskTrees: [],
       taskCreationStep: TaskCreationSteps.OperatorSelection,
+      selectedOperationType: OperationType.Pipx,
       selectedOperationBranch: null,
       getLibraryOperatorsFetchAndError: {
         fetchStatus: FetchState.Idle,
@@ -482,6 +540,7 @@ export const useDataStore = create<DataStoreIf>()(
       },
 
       getLibraryOperators: async () => await doGetLibraryOperators(get, set),
+      setSelectedOperationType: (operationType: OperationType) => doSetSelectedOperationType(operationType, get, set),
       setSelectedOperation: async (operationPos: string) => await doSetSelectedOperation(operationPos, get, set),
       getSelectedOperation: () => doGetSelectedOperation(get),
       isNextStepValid: () => doIsNextStepValid(get),
