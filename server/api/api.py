@@ -99,17 +99,20 @@ def get_parameters(request):
 @permission_classes([AllowAny])
 def submit_operation(request):
   body = json.loads(request.body)
-  operationBranch = body['operationBranch']
+  libraryName = body["operationBranch"][0]
+  libraryApiImpl = getLibraryApi(libraryName)
+  if not libraryApiImpl:
+    errMsg = f'Libraryname "{libraryName}" not known!'
+    print('api.py--submit_operation():', errMsg)
+    return HttpResponseBadRequest(errMsg)
+
+  operationBranch = body["operationBranch"][1:]
   command = body['command']
   servers = body["servers"]
 
-  print('operationBranch:', operationBranch, 'command:', command, 'servers:', servers)
-  fullCommand = command + ['localhost']
-  print('fullCommand:', fullCommand)
-  try:
-     subprocess.run(fullCommand, check=True)
-  except Exception as exc:
-     print('Exception:', exc)
-     return HttpResponseServerError(str(exc));
+  print(f"api.py--submit_operation(): libraryName={libraryName}, operationBranch={operationBranch}")
+  print(f"command={command}, servers={servers}")
 
-  return HttpResponse('OK')
+  result = libraryApiImpl.submitOperation(body['operationBranch'], command, servers)
+
+  return JsonResponse(result, safe=False)

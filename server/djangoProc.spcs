@@ -16,6 +16,7 @@ from bisos.banna import banna_csu
 
 from bisos import b
 from bisos.b import cs
+
 from bisos.b import b_io
 
 import sys
@@ -32,6 +33,9 @@ djangoProc_seedInfo.setup(
     webVirtualDomain="csPlayerPerf.here",
     dev_webPortNu=int(banna_csu.bannaTcpPortNuOf().pyCmnd(argsList=["csPlayerPerf_dev"],).results)
 )
+
+
+
 
 def examples_spcs() -> None:
     #od = collections.OrderedDict
@@ -51,7 +55,14 @@ def examples_spcs() -> None:
     literal(f"manage.py superuserDelete --username bystar")
 
     cs.examples.menuSection(f'*Register csLib*')
+    cmnd('bxDjango_regCsPlayerLibs')
     literal(f"manage.py register_library csLib csLib LibraryAPIImpl --description  'Command Services Library'")
+    literal(f"manage.py register_library static  bisos.csPlayer.drf_csPlayer_static LibraryAPIImpl --description  'A Static CSXU Library For Testing'")
+    literal(f"manage.py register_library pip:bisos3  bisos.csPlayer.drf_csPlayer_pipBisos3 LibraryAPIImpl --description  'pip bisos3 CSXUs'")
+    literal(f"manage.py register_library pip:dev-bisos3  bisos.csPlayer.drf_csPlayer_pipDevBisos3 LibraryAPIImpl --description  'pip dev-bisos3 CSXUs'")
+    literal(f"manage.py register_library pipx  bisos.csPlayer.drf_csPlayer_pipx LibraryAPIImpl --description  'pipx Packages and CSXUs'")
+    literal(f"manage.py register_library modules:facter  bisos.csPlayer.drf_modPlayer_facter LibraryAPIImpl --description  'CSXU Modules for facterModule.cs'")
+    literal(f"manage.py register_library modules:soncli  bisos.csPlayer.drf_modPlayer_soncli LibraryAPIImpl --description  'Uploadable Modules for soncli.cs'")
 
     cs.examples.menuSection(f'*Virtual Domain Deployment Preparations*')
     literal(f"sudo chown {userName}:www-data .")  # Make the current directory writable by www-data
@@ -64,8 +75,63 @@ def examples_spcs() -> None:
     cmnd('dotEnv')
     literal("cat .env")
     cmnd('dotEnv', wrapper="rm .env ; ", comment="# Create .env with DEBUG_FLAG=True for development")
+    cmnd('bxDjango_NOTES')
     cmnd('bxDjango_report')
     cmnd('bxDjango_fullUpdate')
+    literal(f"(pushd {gitClonesBaseDir}/webCliGui/webcligui_api && pip install -e .)")
+    literal(f"(pushd {gitClonesBaseDir}/csLib && pip install -e .)")
+
+
+class bxDjango_NOTES(cs.Cmnd):
+    cmndParamsMandatory = []; cmndParamsOptional = []; cmndArgsLen = {'Min': 0, 'Max': 0,}
+
+    @cs.track(fnLoc=True, fnEntry=True, fnExit=True)
+    def cmnd(self, rtInv: cs.RtInvoker, cmndOutcome: b.op.Outcome,) -> b.op.Outcome:
+
+        NOTES = """
+* Initial Setup
+** Follow /Database Superuser CRUD/ and setup a password for django database
+        cat ~/credentials/django/password
+** fullUpdate -- Run {sys.argv[0]} -i bxDjango_fullUpdate
+
+* Run Server in Dev Mode
+** Run: python manage.py runserver 23501
+** Visit: http://localhost:23501/admin
+
+* Register  bisos.csPlayer.drf_csPlayer_xxx
+** Run:  {sys.argv[0]} -i bxDjango_regCsPlayerLibs
+
+
+        """
+
+        print(f"{NOTES}")
+
+        return(cmndOutcome)
+
+class bxDjango_regCsPlayerLibs(cs.Cmnd):
+    cmndParamsMandatory = []; cmndParamsOptional = []; cmndArgsLen = {'Min': 0, 'Max': 0,}
+
+    @cs.track(fnLoc=True, fnEntry=True, fnExit=True)
+    def cmnd(self, rtInv: cs.RtInvoker, cmndOutcome: b.op.Outcome,) -> b.op.Outcome:
+
+        if b.subProc.WOpW(invedBy=self, log=1).bash(
+                f"""\
+manage.py register_library csLib csLib LibraryAPIImpl --description  'Command Services Library'
+manage.py register_library static  bisos.csPlayer.drf_csPlayer_static LibraryAPIImpl --description  'A Static CSXU Library For Testing'
+manage.py register_library pip:bisos3  bisos.csPlayer.drf_csPlayer_pipBisos3 LibraryAPIImpl --description  'pip bisos3 CSXUs'
+manage.py register_library pip:dev-bisos3  bisos.csPlayer.drf_csPlayer_pipDevBisos3 LibraryAPIImpl --description  'pip dev-bisos3 CSXUs'
+manage.py register_library pipx  bisos.csPlayer.drf_csPlayer_pipx LibraryAPIImpl --description  'pipx Packages and CSXUs'
+manage.py register_library modules:facter  bisos.csPlayer.drf_modPlayer_facter LibraryAPIImpl --description  'CSXU Modules for facterModule.cs'
+manage.py register_library modules:soncli  bisos.csPlayer.drf_modPlayer_soncli LibraryAPIImpl --description  'Uploadable Modules for soncli.cs'
+""",
+        ).isProblematic():  return(b_io.eh.badOutcome(cmndOutcome))
+
+
+
+        return(cmndOutcome)
+
+
+
 
 class bxDjango_fullUpdate(cs.Cmnd):
     cmndParamsMandatory = [ ]
@@ -80,6 +146,8 @@ class bxDjango_fullUpdate(cs.Cmnd):
 
         if b.subProc.WOpW(invedBy=self, log=1).bash(
                 f"""\
+pip install django djangorestframework python-dotenv
+pip install drf-spectacular  # for openapi
 (pushd {gitClonesBaseDir}/webCliGui/webcligui_api && pip install -e .)
 (pushd {gitClonesBaseDir}/csLib && pip install -e .)
 # pushd {here}
@@ -89,7 +157,7 @@ sudo chown {userName}:www-data ./db.sqlite3
 sudo chmod g+w ./db.sqlite3
 manage.py migrate   # Setup the data base
 manage.py collectstatic # Needed for admin page etc
-manage.py superuserCreate --username bystar --email bystar@example.com --password=bxDjango
+manage.py superuserCreate --username bystar --email bystar@example.com --password=$(cat ~/credentials/django/password)
 manage.py register_library csLib csLib LibraryAPIImpl --description  'Command Services Library'
 """,
         ).isProblematic():  return(b_io.eh.badOutcome(cmndOutcome))
