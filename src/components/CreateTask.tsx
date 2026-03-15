@@ -9,7 +9,7 @@ import { TaskCreationSteps, WEB_CLI_GUI_SERVER } from "../store/createTaskIf";
 import { useDataStore } from "../store/dataStore";
 import Button from "./Button";
 import { FetchState } from "../utils/fetchData";
-import WaitCircle from "./WaitCircle";
+import WaitAndError from "./WaitAndError";
 
 const CreationSteps = () => {
   const { 
@@ -55,10 +55,13 @@ const CreationSteps = () => {
       </div>
 
       <div className="flex flex-row">
-        <Button className="!mr-2" text="Back" 
-          onClick={onPreviousStep} disabled={taskCreationStep === TaskCreationSteps.OperatorSelection}/>
-        <Button text={taskCreationStep !== TaskCreationSteps.Preview ? "Next" : "Submit"}
-          onClick={onNextStepOrSubmit} disabled={!isNextStepValid()} />
+        <Button className="!mr-2" 
+          onClick={onPreviousStep} disabled={taskCreationStep === TaskCreationSteps.OperatorSelection}>
+          Back
+        </Button>
+        <Button onClick={onNextStepOrSubmit} disabled={!isNextStepValid()}>
+          {taskCreationStep !== TaskCreationSteps.Preview ? "Next" : "Submit"}
+        </Button>
       </div>
     </div>
   );
@@ -75,6 +78,7 @@ const OperationSelection = ({ isVisible }: OperationSelectionProps) => {
     taskTrees,
     selectedOperationBranch,
     getLibraryOperatorsFetchAndError,
+    getDescriptionFetchAndError,
     getSelectedOperation,
     setSelectedOperation,
   } = useDataStore(state => state.createTask);
@@ -100,14 +104,14 @@ const OperationSelection = ({ isVisible }: OperationSelectionProps) => {
           <option value={OperationType.Pipx}>Pipx</option>
           <option value={OperationType.Module}>Son Module</option>
         </select>
-        {getLibraryOperatorsFetchAndError.fetchStatus === FetchState.Loading && <WaitCircle />}
+        <WaitAndError fetchAndError={getLibraryOperatorsFetchAndError} />
         {taskTrees.length > 0 && <Tree treeData={taskTrees} showLine onSelect={onSelect}/>}
         {taskTrees.length === 0 && getLibraryOperatorsFetchAndError.fetchStatus !== FetchState.Loading &&
           <span>No operations for this operation type</span>}
       </div>
       <div>
-        {!!selectedOperation?.description && 
-          <Markdown>{selectedOperation.description}</Markdown>}
+        {!!selectedOperation?.description && <Markdown>{selectedOperation.description}</Markdown>}
+        <WaitAndError fetchAndError={getDescriptionFetchAndError} />
       </div>
     </div>
   );
@@ -300,7 +304,7 @@ const OperationParameters = ({ isVisible }: OperationParametersProps) => {
         <div>Value</div>
         <div>Description</div>
         
-        {loadParametersFetchAndError.fetchStatus === FetchState.Loading && <WaitCircle />}
+        <WaitAndError fetchAndError={loadParametersFetchAndError} />
         {!!selectedOperation.parameters && <Parameter parameter={selectedOperation.parameters} parameterBranch={[]} />}
       </div>
 
@@ -330,7 +334,7 @@ const SelectServers = ({
         <select className="w-35 text-gray-300 border p-1" disabled>
           <option value="">--select server--</option>
         </select>
-        <Button text="Add" className="!h-9 px-3 py-1 !ml-4" disabled />
+        <Button className="!h-9 px-3 py-1 !ml-4" disabled>Add</Button>
       </div>
       <div className="flex items-center">
         <input className="m-2" type="radio" name="serverSelection" id="selectRegionsRB" value="selectRegions" disabled />
@@ -338,12 +342,12 @@ const SelectServers = ({
         <select className="w-35 text-gray-300 border p-1" disabled>
           <option value="">--select cluster--</option>
         </select>
-        <Button text="Add" className="!h-9 px-3 py-1 !ml-4" disabled />
+        <Button className="!h-9 px-3 py-1 !ml-4" disabled>Add</Button>
       </div>
       <div className="flex items-center">
         <input className="m-2" type="radio" name="serverSelection" id="uploadServersRB" value="uploadServers" disabled />
         <label htmlFor="uploadServersRB" className="w-35 text-gray-300">Upload servers</label>
-        <Button text="Select file" className="!h-9 px-3 py-1" disabled />
+        <Button className="!h-9 px-3 py-1" disabled>Select file</Button>
       </div>
     </div>
   );
@@ -374,7 +378,7 @@ const Preview = ({
         <span>WebCliGui Server</span>
       </div>
 
-      {submitOperationFetchAndError.fetchStatus === FetchState.Loading && <WaitCircle />}
+      <WaitAndError fetchAndError={submitOperationFetchAndError} />
     </div>
   );
 };

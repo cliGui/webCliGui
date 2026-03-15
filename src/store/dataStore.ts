@@ -204,6 +204,19 @@ const doSetSelectedOperationType = (operationType: OperationType, get: GetFuncti
   getFilterLibraryFolders(get, set);
 };
 
+const sendMessagesToParent = (operationBranch: string[]) => {
+  window.parent.postMessage({
+    type: 'csPlayer:packageChanged',
+    data: { packageName: operationBranch[0] },
+  }, '*');
+
+  const operation = operationBranch.reduce<string>((prevValue, curValue) => curValue, '');
+  window.parent.postMessage({
+    type: 'csPlayer:filterChanged',
+    data: { csxuName: operation },
+  }, '*');
+};
+
 const doSetSelectedOperation = async (operationPos: string, get: GetFunction, set: SetFunction) => {
   const operationBranch = getOperationBranch(operationPos, get().createTask.taskTrees);
   if (!operationBranch) {
@@ -229,6 +242,8 @@ const doSetSelectedOperation = async (operationPos: string, get: GetFunction, se
   set(state => {
     state.createTask.selectedOperationBranch = operationBranch;
   }, false, 'setSelectedOperation');
+
+  sendMessagesToParent(operationBranch);
 
   return fetchStatus;
 };
