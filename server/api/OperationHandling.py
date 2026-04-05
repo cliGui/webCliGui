@@ -70,7 +70,7 @@ class OperationHandling:
 
   def submitOperation(self, libraryApiImpl: LibraryAPI, operationBranch: list[str], command: list[str], servers: list[str]):
 
-    operationStatusStart = libraryApiImpl.submitOperation(operationBranch, command, servers)
+    operationStatusStart = libraryApiImpl.submitOperation(operationBranch[1:], command, servers)
 
     status = OperationStatus(uuid=operationStatusStart.uuid, operation_branch=operationBranch, 
                              start_time=operationStatusStart.start_time, elapsed_time=None,

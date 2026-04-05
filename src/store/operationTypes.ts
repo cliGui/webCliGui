@@ -3,6 +3,7 @@ import { ParameterData } from './parameterTypes';
 export enum OperationType {
   Module = "module",
   Pipx = "pipx",
+  Python = "python",
 }
 
 export enum OperationState {

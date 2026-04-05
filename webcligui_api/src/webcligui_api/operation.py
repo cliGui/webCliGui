@@ -6,6 +6,7 @@ from datetime import datetime
 class OperationType(Enum):
     MODULE = "module"
     PIPX = "pipx"
+    PYTHON = "python"
 
 class OperationState(Enum):
     STARTED = "*****Neda Started*****"

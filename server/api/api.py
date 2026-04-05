@@ -132,14 +132,14 @@ def submit_operation(request):
       print('api.py--submit_operation():', errMsg)
       return HttpResponseBadRequest(errMsg)
 
-    operationBranch = body["operationBranch"][1:]
+    operationBranch = body["operationBranch"]
     command = body['command']
     servers = body["servers"]
 
     print(f"api.py--submit_operation(): libraryName={libraryName}, operationBranch={operationBranch}")
     print(f"command={command}, servers={servers}")
 
-    operationStatus = operationHandling.submitOperation(libraryApiImpl, body['operationBranch'], command, servers)
+    operationStatus = operationHandling.submitOperation(libraryApiImpl, operationBranch, command, servers)
     print('operationStatus:', operationStatus)
 
     operationStatusDict = asdict(operationStatus)

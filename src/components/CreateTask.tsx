@@ -102,6 +102,7 @@ const OperationSelection = ({ isVisible }: OperationSelectionProps) => {
                 onChange={evt => setSelectedOperationType(evt.target.value as OperationType)}>
           <option value={OperationType.Pipx}>Pipx</option>
           <option value={OperationType.Module}>Son Module</option>
+          <option value={OperationType.Python}>Python</option>
         </select>
         <WaitAndError fetchAndError={getLibraryOperatorsFetchAndError} />
         {taskTrees.length > 0 && <Tree treeData={taskTrees} showLine onSelect={onSelect}/>}
