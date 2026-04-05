@@ -1,7 +1,7 @@
 import React, { PropsWithChildren } from "react";
 
 const BUTTON_CLASSNAME = "bg-emerald-500 text-white h-10 p-2 border-2 !m-0 !rounded-lg " +
-  "disabled:bg-gray-300";
+  "active:bg-emerald-300 disabled:bg-gray-300";
 
 export interface ButtonProps {
   className?: string;

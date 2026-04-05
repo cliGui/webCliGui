@@ -91,7 +91,6 @@ const OperationSelection = ({ isVisible }: OperationSelectionProps) => {
   if (selectedOperationBranch) {
     selectedOperation = getSelectedOperation();
   }
-  console.log('selectedOperation:', selectedOperation);
 
   return (
     <div className={`flex flex-row ${!isVisible && 'invisible w-0 h-0'}`}>
@@ -282,7 +281,6 @@ const OperationParameters = ({ isVisible }: OperationParametersProps) => {
   if (selectedOperationBranch) {
     selectedOperation = getSelectedOperation();
   }
-  console.log('selectedOperation:', selectedOperation);
 
   useEffect(() => {
     if (selectedOperation && !selectedOperation.parameters) {
@@ -363,6 +361,7 @@ const Preview = ({
   const {
     getExecuteCommand,
     submitOperationFetchAndError,
+    operationStatus,
   } = useDataStore(store => store.createTask);
 
   const execCmd = getExecuteCommand();
@@ -379,6 +378,17 @@ const Preview = ({
       </div>
 
       <WaitAndError fetchAndError={submitOperationFetchAndError} />
+      {!!operationStatus && (
+        <div>
+          <h5>Status:</h5>
+          <div className="grid grid-cols-[75px_1fr]">
+            <div>uuid</div><div>{operationStatus.uuid}</div>
+            <div>status</div><div>{operationStatus.status}</div>
+            <div>start time</div><div>{operationStatus.startTime.toLocaleString()}</div>
+            <div>folder</div><div>{operationStatus.folder}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

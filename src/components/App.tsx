@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Tab, Tabs } from 'react-bootstrap';
 import CreateTask from './CreateTask';
+import Status from './Status';
 
 const App  = () => {
   const [selectedTabKey, setSelectedTabKey] = useState('createTask');
@@ -21,7 +22,7 @@ const App  = () => {
         </Tab>
 
         <Tab eventKey="status" title="Status">
-          Status
+          <Status />
         </Tab>
       </Tabs>
     </div>

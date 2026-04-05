@@ -1,10 +1,10 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from .operation import OperationFolder
+from .operation import OperationFolder, OperationStatusStart
 from .parameters import ParameterData
 
 
-class LibraryAPI(ABC):
+class LibraryAPI(ABC):    
     @abstractmethod
     def getOperationHierarchy(self) -> OperationFolder:
         pass
@@ -18,5 +18,6 @@ class LibraryAPI(ABC):
         pass
 
     @abstractmethod
-    def submitOperation(self, operationBranch: list[str], command: list[str], servers: list[str]):
+    def submitOperation(self, operationBranch: list[str], command: list[str], servers: list[str]) -> OperationStatusStart:
         pass
+    

@@ -52,4 +52,4 @@ class ParameterOptionsToList(ParameterBase):
       super().__post_init__()   
       self.type = ParameterType.PARAMETER_OPTIONS_TO_LIST
 
-ParameterData = ParameterList | ParameterOptionsToList
+ParameterData = ParameterList | ParameterOptionsToList | None

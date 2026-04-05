@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { FetchAndError } from "../utils/fetchData";
+import { FetchStatusAndError } from "../utils/fetchData";
 import Button from "./Button";
 
 interface ErrorMessageProps {
-  fetchAndError: FetchAndError;
+  fetchAndError: FetchStatusAndError;
   className?: string;
 }
 

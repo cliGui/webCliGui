@@ -1,5 +1,5 @@
-import { FetchStatus, FetchAndError } from "../utils/fetchData";
-import { Operation, OperationFolder, OperationType } from "./operationTypes";
+import { FetchStatus, FetchStatusAndError } from "../utils/fetchData";
+import { Operation, OperationFolder, OperationStatus, OperationType } from "./operationTypes";
 import { ParameterValue } from "./parameterTypes";
 
 export interface TreeNode {
@@ -24,10 +24,11 @@ export interface CreateTaskIf {
   taskCreationStep: TaskCreationSteps;
   selectedOperationType: OperationType;
   selectedOperationBranch: string[] | null;
-  getLibraryOperatorsFetchAndError: FetchAndError;
-  getDescriptionFetchAndError: FetchAndError;
-  loadParametersFetchAndError: FetchAndError;
-  submitOperationFetchAndError: FetchAndError;
+  operationStatus: OperationStatus | null;
+  getLibraryOperatorsFetchAndError: FetchStatusAndError;
+  getDescriptionFetchAndError: FetchStatusAndError;
+  loadParametersFetchAndError: FetchStatusAndError;
+  submitOperationFetchAndError: FetchStatusAndError;
 
   getLibraryOperators: () => Promise<FetchStatus>;
   setSelectedOperationType: (operationType: OperationType) => void;

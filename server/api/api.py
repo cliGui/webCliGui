@@ -1,15 +1,18 @@
+from datetime import datetime, timedelta
 from enum import Enum
 from dataclasses import asdict
 import importlib
 import json
-import subprocess
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest, HttpResponseServerError
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny
-from .models import LibraryRegistration
+from .models import LibraryRegistration, Status
+from .OperationHandling import OperationHandling
 
 libraryApis = []
-library2Idx = {}
+library2Idx = {}   # Mapping from library_name to libraryApiImpl in libraryApis
+
+operationHandling = OperationHandling()
 
 def instantiateLibraryModule(obj):
     module = importlib.import_module(obj.module_path)
@@ -30,6 +33,10 @@ def load_library_apis():
 def to_json_safe(obj):
     if isinstance(obj, Enum):
         return obj.value
+    if isinstance(obj, datetime):
+       return obj.isoformat()
+    if isinstance(obj, timedelta):
+       return obj.total_seconds()
     if isinstance(obj, list):
         return [to_json_safe(idx) for idx in obj]
     if isinstance(obj, dict):
@@ -38,15 +45,20 @@ def to_json_safe(obj):
 
 @api_view(['GET'])
 def get_operation_hierarchy(request):
-  load_library_apis()
-  operations = []
+  try:
+    load_library_apis()
+    operations = []
 
-  for libraryAPIImpl in libraryApis:
-    hierarchy = libraryAPIImpl.getOperationHierarchy()
-    dict = to_json_safe(asdict(hierarchy))
-    operations.append(dict)
+    for libraryAPIImpl in libraryApis:
+      hierarchy = libraryAPIImpl.getOperationHierarchy()
+      dict = to_json_safe(asdict(hierarchy))
+      operations.append(dict)
 
-  return JsonResponse(operations, safe=False)
+    return JsonResponse(operations, safe=False)
+  
+  except Exception as exc:
+     print('get_operation_hierarchy(), exception:', exc)
+     return HttpResponseServerError(exc)
 
 def getLibraryApi(libraryName):
   global libraryApiImpl, library2Idx
@@ -63,56 +75,113 @@ def getLibraryApi(libraryName):
 @authentication_classes([])
 @permission_classes([AllowAny])
 def get_description(request):
-  body = json.loads(request.body)
-  libraryName = body["operationBranch"][0]
-  libraryApiImpl = getLibraryApi(libraryName)
-  if not libraryApiImpl:
-    errMsg = f'Libraryname "{libraryName}" not known!'
-    print('get_description():', errMsg)
-    return HttpResponseBadRequest(errMsg)
+  try:
+    body = json.loads(request.body)
+    libraryName = body["operationBranch"][0]
+    libraryApiImpl = getLibraryApi(libraryName)
+    if not libraryApiImpl:
+      errMsg = f'Libraryname "{libraryName}" not known!'
+      print('get_description():', errMsg)
+      return HttpResponseBadRequest(errMsg)
 
-  operationBranch = body["operationBranch"][1:]
-  description = libraryApiImpl.getDescription(operationBranch)
+    operationBranch = body["operationBranch"][1:]
+    description = libraryApiImpl.getDescription(operationBranch)
+    if not description:
+       raise Exception(f'No description for {operationBranch}')
 
-  return JsonResponse(description, safe=False)
+    return JsonResponse(description, safe=False)
+  
+  except Exception as exc:
+     print('get_description(), exception:', exc)
+     return HttpResponseServerError(exc)
 
 @api_view(['POST'])
 @authentication_classes([])
 @permission_classes([AllowAny])
 def get_parameters(request):
-  body = json.loads(request.body)
-  libraryName = body["operationBranch"][0]
-  libraryApiImpl = getLibraryApi(libraryName)
-  if not libraryApiImpl:
-    errMsg = f'Libraryname "{libraryName}" not known!'
-    print('get_parameters():', errMsg)
-    return HttpResponseBadRequest(errMsg)
+  try:
+    body = json.loads(request.body)
+    libraryName = body["operationBranch"][0]
+    libraryApiImpl = getLibraryApi(libraryName)
+    if not libraryApiImpl:
+      errMsg = f'Libraryname "{libraryName}" not known!'
+      print('get_parameters():', errMsg)
+      return HttpResponseBadRequest(errMsg)
 
-  operationBranch = body["operationBranch"][1:]
-  parameterData = libraryApiImpl.getParameters(operationBranch)
-  parameters = to_json_safe(asdict(parameterData))
+    operationBranch = body["operationBranch"][1:]
+    parameterData = libraryApiImpl.getParameters(operationBranch) 
+    paramDict = asdict(parameterData) if parameterData is not None else {}
+    parameters = to_json_safe(paramDict)
 
-  return JsonResponse(parameters, safe=False)
+    return JsonResponse(parameters, safe=False)
+
+  except Exception as exc:
+     print('get_parameters(), exception:', exc)
+     return HttpResponseServerError(exc)
 
 @api_view(['POST'])
 @authentication_classes([])
 @permission_classes([AllowAny])
 def submit_operation(request):
-  body = json.loads(request.body)
-  libraryName = body["operationBranch"][0]
-  libraryApiImpl = getLibraryApi(libraryName)
-  if not libraryApiImpl:
-    errMsg = f'Libraryname "{libraryName}" not known!'
-    print('api.py--submit_operation():', errMsg)
-    return HttpResponseBadRequest(errMsg)
+  try:
+    body = json.loads(request.body)
+    libraryName = body["operationBranch"][0]
+    libraryApiImpl = getLibraryApi(libraryName)
+    if not libraryApiImpl:
+      errMsg = f'Libraryname "{libraryName}" not known!'
+      print('api.py--submit_operation():', errMsg)
+      return HttpResponseBadRequest(errMsg)
 
-  operationBranch = body["operationBranch"][1:]
-  command = body['command']
-  servers = body["servers"]
+    operationBranch = body["operationBranch"][1:]
+    command = body['command']
+    servers = body["servers"]
 
-  print(f"api.py--submit_operation(): libraryName={libraryName}, operationBranch={operationBranch}")
-  print(f"command={command}, servers={servers}")
+    print(f"api.py--submit_operation(): libraryName={libraryName}, operationBranch={operationBranch}")
+    print(f"command={command}, servers={servers}")
 
-  result = libraryApiImpl.submitOperation(body['operationBranch'], command, servers)
+    operationStatus = operationHandling.submitOperation(libraryApiImpl, body['operationBranch'], command, servers)
+    print('operationStatus:', operationStatus)
 
-  return JsonResponse(result, safe=False)
+    operationStatusDict = asdict(operationStatus)
+    operationStatusSafe = to_json_safe(operationStatusDict)
+
+    return JsonResponse(operationStatusSafe, safe=False)
+
+  except Exception as exc:
+     print('submit_operation(), exception:', exc)
+     return HttpResponseServerError(exc)
+
+
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def get_operation_status_list(request):
+  try:
+    offset = int(request.query_params.get("offset", 0))
+    limit = int(request.query_params.get("limit", 25))
+
+    qs = Status.objects.order_by('-start_time')
+    objects = qs[offset:offset + limit]
+    num_status = qs.count()
+
+    data = {
+        "num_status": num_status,
+        "offset": offset,
+        "status_data": [
+            {
+                "uuid": obj.id,
+                "operation_branch": obj.operation_branch,
+                "start_time": obj.start_time,
+                "elapsed_time": obj.elapsed_time,
+                "status": obj.status,
+                "folder": obj.directory,
+            }
+            for obj in objects
+        ]
+    }
+    dataSafe = to_json_safe(data)
+    return JsonResponse(dataSafe)
+
+  except Exception as exc:
+     print('get_operation_status_list(), exception:', exc)
+     return HttpResponseServerError(exc)

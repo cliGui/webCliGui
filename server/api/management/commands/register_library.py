@@ -62,9 +62,10 @@ class Command(BaseCommand):
                 class_name=class_name,
                 description=description,
             )
+
+            self.stdout.write(
+              self.style.SUCCESS("Library registered successfully")
+            )
+
         except Exception as e:
             raise CommandError(str(e))
-
-        self.stdout.write(
-            self.style.SUCCESS("Library registered successfully")
-        )
