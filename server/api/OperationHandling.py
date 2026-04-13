@@ -6,8 +6,9 @@ from datetime import datetime, timedelta
 import re
 import threading
 
-from webcligui_api import LibraryAPI, OperationState, OperationStatusStart
+from webcligui_api import LibraryAPI, OperationState
 from .models import Status
+from .constants import OPERATION_ROOT_DIRECTORY
 
 STATUS_FILE_NAME = 'neda_status.txt'
 OPERATION_FILE_NAME ='neda_operation.txt'
@@ -44,7 +45,8 @@ class OperationHandling:
       self.checkUuid(uuid, folder)
           
   def checkUuid(self, uuid, folder):
-    with open(f"{folder}/{STATUS_FILE_NAME}", "r") as statusFile:
+    status_filename = OPERATION_ROOT_DIRECTORY / folder / STATUS_FILE_NAME
+    with status_filename.open("r") as statusFile:
       lastLine = deque(statusFile, maxlen=1)[0] if statusFile else None
     print(lastLine)
     if not lastLine.startswith('Elapsed time'):
@@ -76,14 +78,18 @@ class OperationHandling:
                              start_time=operationStatusStart.start_time, elapsed_time=None,
                             status=OperationState.STARTED.value, folder=operationStatusStart.folder)
 
-    with open(f"{status.folder}/{OPERATION_FILE_NAME}", "w") as opFile:
+    folder = OPERATION_ROOT_DIRECTORY / status.folder
+
+    operation_filename = folder / OPERATION_FILE_NAME
+    with operation_filename.open("w") as opFile:
         opFile.write(f"uuid: {status.uuid}\n")
         opFile.write(f"operationBranch: {operationBranch}\n")
         opFile.write(f"command: {command}\n")
         opFile.write(f"folder: {status.folder}\n")
         opFile.write(f"start_time: {status.start_time}\n")
 
-    with open(f"{status.folder}/neda_status.txt", "a") as statusFile:      
+    status_filename = folder / STATUS_FILE_NAME
+    with status_filename.open("a") as statusFile:      
         statusFile.write(f"Start time: {status.start_time.isoformat()}, {status.status}\n")
 
     Status.objects.create(id=status.uuid, operation_branch=operationBranch, start_time=status.start_time,

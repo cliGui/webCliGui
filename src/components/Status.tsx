@@ -130,7 +130,11 @@ const StatusTable = () => {
             <td className={`${TD_CLASSNAME} ${START_TIME_CLASSNAME}`} data-label="Start time">{stat.startTime.toLocaleString()}</td>
             <td className={`${TD_CLASSNAME} ${ELAPSED_TIME_CLASSNAME}`} data-label="Elapsed time">{elapsedTimeStr(stat.elapsedTime)}</td>
             <td className={`${TD_CLASSNAME} ${STATUS_CLASSNAME}`} data-label="Status">{stat.status}</td>
-            <td className={`${TD_CLASSNAME} ${FOLDER_CLASSNAME}`} data-label="Folder">{stat.folder}</td>
+            <td className={`${TD_CLASSNAME} ${FOLDER_CLASSNAME}`} data-label="Folder">
+              <a href={`/api/folder-access/${stat.folder}`} target="_blank" rel="noopener noreferrer">
+                {stat.folder}
+              </a>
+            </td>
           </tr>
         ))}
         {(getOperationStatusListFetchAndError.fetchStatus === FetchState.Success && operationStatusList.length === 0) && (

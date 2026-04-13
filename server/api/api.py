@@ -3,9 +3,12 @@ from enum import Enum
 from dataclasses import asdict
 import importlib
 import json
-from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest, HttpResponseServerError
+import os
+from django.http import HttpResponseForbidden, HttpResponseNotFound, JsonResponse, HttpResponse, HttpResponseBadRequest, HttpResponseServerError
+from django.utils.html import escape
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny
+from .constants import OPERATION_ROOT_DIRECTORY
 from .models import LibraryRegistration, Status
 from .OperationHandling import OperationHandling
 
@@ -151,7 +154,6 @@ def submit_operation(request):
      print('submit_operation(), exception:', exc)
      return HttpResponseServerError(exc)
 
-
 @api_view(['GET'])
 @authentication_classes([])
 @permission_classes([AllowAny])
@@ -184,4 +186,37 @@ def get_operation_status_list(request):
 
   except Exception as exc:
      print('get_operation_status_list(), exception:', exc)
+     return HttpResponseServerError(exc)
+
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def folder_access(request, path):
+  try:
+    full_path = (OPERATION_ROOT_DIRECTORY / path).resolve()
+    if not str(full_path).startswith(str(OPERATION_ROOT_DIRECTORY)):
+      errMsg = f"{path} is not allowed"
+      return HttpResponseForbidden(errMsg)
+       
+    if not os.path.exists(full_path):
+      errMsg= f"{path} not found"
+      return HttpResponseNotFound(errMsg)
+
+    if os.path.isfile(full_path):
+      with open(full_path, "r") as f:
+        content = f.read()
+      return HttpResponse(f"<pre>{escape(content)}</pre>")
+    
+    file_list = []
+    files = os.listdir(full_path)
+    for name in files:
+        file_path = os.path.join(path, name)
+        file_list.append(f'<li><a href="{file_path}">{name}</a></li>')
+
+    folder_page = f'<h3 style="margin: 25px; font-weight: 500">Folder {path}</h3>\n';
+    folder_page += "<ul>" + "".join(file_list) + "</ul>"
+    return HttpResponse(folder_page)
+  
+  except Exception as exc:
+     print('folder_access(), exception:', exc)
      return HttpResponseServerError(exc)
