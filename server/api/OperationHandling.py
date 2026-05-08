@@ -35,7 +35,9 @@ class OperationHandling:
     self.checkUuids()
 
     diffTime = max(CHECK_UUIDS_TIMER_INTERVAL - (datetime.now() - startTime).total_seconds(), 0)
-    threading.Timer(diffTime, self.runInterval).start()
+    timer = threading.Timer(diffTime, self.runInterval)
+    timer.daemon = True
+    timer.start()
 
   def checkUuids(self):
     with self.uuidsLock:

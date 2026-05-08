@@ -15,7 +15,14 @@ from .OperationHandling import OperationHandling
 libraryApis = []
 library2Idx = {}   # Mapping from library_name to libraryApiImpl in libraryApis
 
-operationHandling = OperationHandling()
+operationHandling = None
+
+
+def get_operation_handling():
+  global operationHandling
+  if operationHandling is None:
+    operationHandling = OperationHandling()
+  return operationHandling
 
 def instantiateLibraryModule(obj):
     module = importlib.import_module(obj.module_path)
@@ -142,7 +149,9 @@ def submit_operation(request):
     print(f"api.py--submit_operation(): libraryName={libraryName}, operationBranch={operationBranch}")
     print(f"command={command}, servers={servers}")
 
-    operationStatus = operationHandling.submitOperation(libraryApiImpl, operationBranch, command, servers)
+    operationStatus = get_operation_handling().submitOperation(
+      libraryApiImpl, operationBranch, command, servers
+    )
     print('operationStatus:', operationStatus)
 
     operationStatusDict = asdict(operationStatus)
