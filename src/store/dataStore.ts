@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import dataReplacer from '../utils/dataReplacer';
+import dataReplacer from '@utils/dataReplacer';
 import { DataStoreIf } from './dataStoreIf';
 import { createTaskSlice } from './createTaskSlice';
 import { operationStatusSlice } from './operationStatusSlice';

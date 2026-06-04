@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react';
-import { useDataStore } from '../store/dataStore';
-import { FetchState } from '../utils/fetchData';
+import { useDataStore } from '@store/dataStore';
+import { FetchState } from '@utils/fetchData';
 import {
   TABLE_CLASSNAME, THEAD_CLASSNAME, TBODY_CLASSNAME, TR_CLASSNAME, TH_CLASSNAME, TD_CLASSNAME,
   OPERATION_CLASSNAME, START_TIME_CLASSNAME, ELAPSED_TIME_CLASSNAME, STATUS_CLASSNAME,
   FOLDER_CLASSNAME,
 } from './constants';
-import WaitAndError from './WaitAndError';
-import Button from './Button';
+import WaitAndError from './regalia/WaitAndError';
+import Button from './regalia/Button';
 
 const NUM_COLS = 5;
 const NUM_OPERATION_STATUS_PER_PAGE = 25;

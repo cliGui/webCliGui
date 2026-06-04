@@ -1,4 +1,4 @@
-import { FetchStatus, FetchStatusAndError } from "../utils/fetchData";
+import { FetchStatus, FetchStatusAndError } from "@utils/fetchData";
 import { Operation, OperationFolder, OperationStatus, OperationType } from "./operationTypes";
 import { ParameterValue } from "./parameterTypes";
 

@@ -1,4 +1,4 @@
-import { FetchStatus, FetchStatusAndError } from "../utils/fetchData";
+import { FetchStatus, FetchStatusAndError } from "@utils/fetchData";
 import { OperationStatus } from "./operationTypes";
 
 export interface OperationStatusIf {

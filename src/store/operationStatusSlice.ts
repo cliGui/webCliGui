@@ -3,7 +3,7 @@ import { GetFunction, SetFunction } from './dataStoreTypes';
 import { OperationStatusIf } from './operationStatusIf';
 import { DataStoreIf } from './dataStoreIf';
 import { OperationStatus } from './operationTypes';
-import fetchData, { FetchState, FetchStatus, FetchStatusAndError } from '../utils/fetchData';
+import fetchData, { FetchState, FetchStatus, FetchStatusAndError } from '@utils/fetchData';
 
 const doGetOperationStatusList = async (offset: number, limit: number, get: GetFunction, set: SetFunction): Promise<FetchStatus> => {
   if (get().operationStatus.getOperationStatusListFetchAndError.fetchStatus === FetchState.Loading) {

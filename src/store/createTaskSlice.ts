@@ -2,8 +2,8 @@ import { StateCreator  } from 'zustand';
 import { GetFunction, SetFunction } from './dataStoreTypes';
 import { CreateTaskIf } from "./createTaskIf";
 import { DataStoreIf } from './dataStoreIf';
-import fetchData, { FetchState, FetchStatus, FetchStatusAndError } from '../utils/fetchData';
-import deepDiff from '../utils/deepDiff';
+import fetchData, { FetchState, FetchStatus, FetchStatusAndError } from '@utils/fetchData';
+import deepDiff from '@utils/deepDiff';
 import { TaskCreationSteps, TreeNode, WEB_CLI_GUI_SERVER } from './createTaskIf';
 import { OperationBase, Operation, OperationType, OperationFolder, OperationStatus } from './operationTypes';
 import { ParameterType, ParameterValue, ParameterBase, ParameterPreference, 

@@ -1,18 +1,14 @@
 import React, { useEffect } from "react";
-import Tree from 'rc-tree';
-import Markdown from 'react-markdown';
-import { Operation, OperationType, } from '../store/operationTypes';
-import {
-  ParameterBase, ParameterOptionsToList, ParameterPreference, ParameterStringValue, ParameterType,
-} from '../store/parameterTypes';
-import { TaskCreationSteps, WEB_CLI_GUI_SERVER } from "../store/createTaskIf";
-import { useDataStore } from "../store/dataStore";
-import Button from "./Button";
-import { FetchState } from "../utils/fetchData";
-import WaitAndError from "./WaitAndError";
+import { TaskCreationSteps } from "@store/createTaskIf";
+import { useDataStore } from "@store/dataStore";
+import Button from "./regalia/Button";
+import OperationSelection from "./createTaskSteps/OperationSelection";
+import OperationParameters from "./createTaskSteps/OperationParameters";
+import SelectServers from "./createTaskSteps/SelectServers";
+import Preview from "./createTaskSteps/Preview";
 
 const CreationSteps = () => {
-  const { 
+  const {
     taskCreationStep,
     isNextStepValid,
     setNextTaskCreationStep,
@@ -33,11 +29,11 @@ const CreationSteps = () => {
     <div className="flex flex-row mb-4 justify-between">
       <div className="flex flex-row">
         {['Select Operation', 'Parameters', 'Servers', 'Preview'].map((itemText, idx) => {
-          const flagBodyColor = idx < taskCreationStep ? 'bg-emerald-400' : 
+          const flagBodyColor = idx < taskCreationStep ? 'bg-emerald-400' :
             (idx === taskCreationStep ? 'bg-blue-400' : 'bg-gray-300');
-          const flagTriangleColor = idx < taskCreationStep ? 'border-l-emerald-400' : 
+          const flagTriangleColor = idx < taskCreationStep ? 'border-l-emerald-400' :
             (idx === taskCreationStep ? 'border-l-blue-400' : 'border-l-gray-300');
-  
+
           return (
             <div key={itemText} className="flex flex-col">
               <div className="flex flex-row items-center">
@@ -55,7 +51,7 @@ const CreationSteps = () => {
       </div>
 
       <div className="flex flex-row">
-        <Button className="!mr-2" 
+        <Button className="!mr-2"
           onClick={onPreviousStep} disabled={taskCreationStep === TaskCreationSteps.OperatorSelection}>
           Back
         </Button>
@@ -63,333 +59,6 @@ const CreationSteps = () => {
           {taskCreationStep !== TaskCreationSteps.Preview ? "Next" : "Submit"}
         </Button>
       </div>
-    </div>
-  );
-};
-
-interface OperationSelectionProps {
-  isVisible: boolean;
-}
-
-const OperationSelection = ({ isVisible }: OperationSelectionProps) => {
-  const {
-    selectedOperationType,
-    setSelectedOperationType,
-    taskTrees,
-    selectedOperationBranch,
-    getLibraryOperatorsFetchAndError,
-    getDescriptionFetchAndError,
-    getSelectedOperation,
-    setSelectedOperation,
-  } = useDataStore(state => state.createTask);
-
-  const onSelect = (selectedKeys: React.Key[], selectData: any) => {
-    setSelectedOperation(selectData.node.pos);
-  };
-
-  let selectedOperation: Operation | null = null;
-  if (selectedOperationBranch) {
-    selectedOperation = getSelectedOperation();
-  }
-
-  return (
-    <div className={`flex flex-row ${!isVisible && 'invisible w-0 h-0'}`}>
-      <div className="flex flex-col w-40" >
-        <h4>Operations</h4>
-        <label htmlFor="operationTypeSelector">Operation Type:</label>
-        <select id="operationTypeSelector" value={selectedOperationType}
-                className="border-1 !mr-4 !mb-4"
-                onChange={evt => setSelectedOperationType(evt.target.value as OperationType)}>
-          <option value={OperationType.Pipx}>Pipx</option>
-          <option value={OperationType.Module}>Son Module</option>
-          <option value={OperationType.Python}>Python</option>
-        </select>
-        <WaitAndError fetchAndError={getLibraryOperatorsFetchAndError} />
-        {taskTrees.length > 0 && <Tree treeData={taskTrees} showLine onSelect={onSelect}/>}
-        {taskTrees.length === 0 && getLibraryOperatorsFetchAndError.fetchStatus !== FetchState.Loading &&
-          <span>No operations for this operation type</span>}
-      </div>
-      <div>
-        {!!selectedOperation?.description && <Markdown>{selectedOperation.description}</Markdown>}
-        <WaitAndError fetchAndError={getDescriptionFetchAndError} />
-      </div>
-    </div>
-  );
-};
-
-interface ToggleParameterProps {
-  parameterBranch: number[];
-  parameterBase: ParameterBase;
-}
-
-const ToggleParameter = ({
-  parameterBranch,
-  parameterBase,
-}: ToggleParameterProps) => {
-  const setParameterValue = useDataStore(state => state.createTask.setParameterValue);
-
-  if (parameterBase.mandatory) {
-    return <div className="justify-self-center">*</div>
-  }
-
-  return (
-    <input id={`checkbox-${parameterBase.name}`} type="checkbox" 
-           className="w-[20px] h-[20px] justify-self-center"
-           checked={parameterBase.isSelected}
-           onChange={evt => setParameterValue(parameterBranch, !!evt.target.checked)} />
-  );
-};
-
-interface ParameterPreferenceProps {
-  parameterBranch: number[];
-  parameterPreference: ParameterPreference;
-}
-
-const ParameterPreferenceComponent = ({
-  parameterBranch,
-  parameterPreference,
-}: ParameterPreferenceProps) => {
-  const textColor = !parameterPreference.isSelected ? 'text-gray-300' : '';
-
-  return (
-    <>
-      <ToggleParameter parameterBranch={parameterBranch} parameterBase={parameterPreference} />
-      <div className={textColor}>{parameterPreference.name}</div>
-      <div/>
-      <div className={textColor}>{parameterPreference.description}</div>
-    </>
-  );
-};
-
-interface ParameterStringValueProps {
-  parameterBranch: number[];
-  parameterStringValue: ParameterStringValue;
-}
-
-const ParameterStringValueComponent = ({
-  parameterBranch,
-  parameterStringValue,
-}: ParameterStringValueProps) => {
-  const setParameterValue = useDataStore(state => state.createTask.setParameterValue);
-  const textColor = !parameterStringValue.isSelected ? 'text-gray-300' : '';
-
-  return (
-    <>
-      <ToggleParameter parameterBranch={parameterBranch} parameterBase={parameterStringValue} />
-      <label className={`text-base ${textColor}`} 
-              htmlFor={`string-value-${parameterStringValue.name}`}>
-        {parameterStringValue.name}
-      </label>
-      <input id={`string-value-${parameterStringValue.name}`}
-              className="border-1 h-8 p-1 disabled:border-gray-300 disabled:text-gray-300"
-              value={parameterStringValue.value || ''} 
-              onChange={evt => setParameterValue(parameterBranch, evt.target.value)} 
-              disabled={!parameterStringValue.isSelected} />
-      <div className={textColor}>{parameterStringValue.description}</div>
-    </>
-  );
-};
-
-interface ParameterOptionsToListProps {
-  parameterBranch: number[];
-  parameterOptionsToList: ParameterOptionsToList;
-}
-
-const ParameterOptionsToListComponent = ({
-  parameterBranch,
-  parameterOptionsToList,
-}: ParameterOptionsToListProps) => {
-  const setParameterValue = useDataStore(state => state.createTask.setParameterValue);
-  const textColor = !parameterOptionsToList.isSelected ? 'text-gray-300' : '';
-
-  let selectedParameterList: ParameterBase[] = [];
-  if (parameterOptionsToList.selectedListIdx >= 0) {
-    selectedParameterList = parameterOptionsToList.options[parameterOptionsToList.selectedListIdx].parameters;
-  }
-
-  return (
-    <>
-      <ToggleParameter parameterBranch={parameterBranch} parameterBase={parameterOptionsToList} />
-      <label className={`text-base ${textColor}`} 
-        htmlFor={`optionsToList-${parameterOptionsToList.name}`}>
-        {parameterOptionsToList.name}
-      </label>
-      <select id={`optionsToList-${parameterOptionsToList.name}`}
-        className="border-1 h-8 disabled:border-gray-300 disabled:text-gray-300"
-        value={parameterOptionsToList.selectedListIdx}
-        onChange={evt => {
-            const idx = parseInt(evt.target.value);
-            setParameterValue(parameterBranch, idx);
-          }}
-        disabled={!parameterOptionsToList.isSelected}
-      >
-        <option value="-1">--Please choose an option--</option>
-        {parameterOptionsToList.options.map((opt, idx) => <option key={idx} value={idx}>{opt.name}</option>)}
-      </select>
-      <div className={textColor}>{parameterOptionsToList.description}</div>
-
-      {selectedParameterList.map((param, idx) => (
-          <React.Fragment key={`${param.name}${idx}`}>
-            <Parameter parameter={param} parameterBranch={[...parameterBranch, idx]} />
-          </React.Fragment>))}
-    </>
-  );
-};
-
-interface ParameterProps {
-  parameter: ParameterBase;
-  parameterBranch: number[];
-}
-
-const Parameter = ({
-  parameter,
-  parameterBranch
-
-}: ParameterProps) => {
-  switch (parameter.type) {
-    case ParameterType.PREFERENCE: {
-      const parameterPreference = parameter as ParameterPreference;
-      return <ParameterPreferenceComponent parameterPreference={parameterPreference} parameterBranch={parameterBranch} />;
-    }
-
-    case ParameterType.STRING_VALUE: {
-      const paramStringValue = parameter as ParameterStringValue;
-      return <ParameterStringValueComponent parameterStringValue={paramStringValue} parameterBranch={parameterBranch} />;
-    }
-
-    case ParameterType.PARAMETER_OPTIONS_TO_LIST: {
-      const optionsToList = parameter as ParameterOptionsToList;
-      return <ParameterOptionsToListComponent parameterOptionsToList={optionsToList} parameterBranch={parameterBranch} />;
-    }
-  }
-  return null;
-}
-
-
-interface OperationParametersProps {
-  isVisible: boolean;
-}
-
-const OperationParameters = ({ isVisible }: OperationParametersProps) => {
-  const {
-    selectedOperationBranch,
-    loadParametersFetchAndError,
-    loadParameters,
-    getSelectedOperation,
-  } = useDataStore(state => state.createTask);
-
-  let selectedOperation: Operation | null = null;
-  if (selectedOperationBranch) {
-    selectedOperation = getSelectedOperation();
-  }
-
-  useEffect(() => {
-    if (selectedOperation && !selectedOperation.parameters) {
-      loadParameters();
-    }
-  }, [selectedOperation]);
-
-  if (!selectedOperation) {
-    return <div className={`${!isVisible && 'invisible w-0 h-0'}`}>
-      No operation selected?!?!
-    </div>
-  }
-
-  return (
-    <div className={`${!isVisible && 'invisible w-0 h-0'}`}>
-      <div className="grid grid-cols-[50px_175px_225px_auto] gap-2 items-center">
-        <div className="justify-self-center">Select</div>
-        <div>Parameter</div>
-        <div>Value</div>
-        <div>Description</div>
-        
-        <WaitAndError fetchAndError={loadParametersFetchAndError} />
-        {!!selectedOperation.parameters && <Parameter parameter={selectedOperation.parameters} parameterBranch={[]} />}
-      </div>
-
-      {loadParametersFetchAndError.fetchStatus === FetchState.Success && !selectedOperation.parameters &&
-          <div>No parameters needed</div>}
-      <div className="mt-10 text-xs italic">*: Mandatory parameters need to be filled in</div>
-    </div>
-  );
-};
-
-interface SelectServersProps {
-  isVisible: boolean;
-}
-
-const SelectServers = ({
-  isVisible,
-}: SelectServersProps) => {
-  return (
-    <div className={`flex flex-col gap-3 ${!isVisible && 'invisible w-0 h-0'}`}>
-      <div className="flex items-center">
-        <input className="m-2" type="radio" name="serverSelection" id="webCliGuiServerRB" value="webCliGuiServer" checked />
-        <label htmlFor="webCliGuiServerRB">{WEB_CLI_GUI_SERVER}</label>
-      </div>
-      <div className="flex items-center">
-        <input className="m-2" type="radio" name="serverSelection" id="selectServersRB" value="selectServers" disabled />
-        <label htmlFor="selectServersRB" className="w-35 text-gray-300">Select Servers</label>
-        <select className="w-35 text-gray-300 border p-1" disabled>
-          <option value="">--select server--</option>
-        </select>
-        <Button className="!h-9 px-3 py-1 !ml-4" disabled>Add</Button>
-      </div>
-      <div className="flex items-center">
-        <input className="m-2" type="radio" name="serverSelection" id="selectRegionsRB" value="selectRegions" disabled />
-        <label htmlFor="selectRegionsRB" className="w-35 text-gray-300">Select Cluster</label>
-        <select className="w-35 text-gray-300 border p-1" disabled>
-          <option value="">--select cluster--</option>
-        </select>
-        <Button className="!h-9 px-3 py-1 !ml-4" disabled>Add</Button>
-      </div>
-      <div className="flex items-center">
-        <input className="m-2" type="radio" name="serverSelection" id="uploadServersRB" value="uploadServers" disabled />
-        <label htmlFor="uploadServersRB" className="w-35 text-gray-300">Upload servers</label>
-        <Button className="!h-9 px-3 py-1" disabled>Select file</Button>
-      </div>
-    </div>
-  );
-}
-
-interface PreviewProps {
-  isVisible: boolean;
-}
-
-const Preview = ({
-  isVisible,
-}: PreviewProps) => {
-  const {
-    getExecuteCommand,
-    submitOperationFetchAndError,
-    operationStatus,
-  } = useDataStore(store => store.createTask);
-
-  const execCmd = getExecuteCommand();
-
-  return (
-    <div className={`flex flex-row ${!isVisible && 'invisible w-0 h-0'}`}>
-      <div className="flex flex-col w-[500px]">
-        <h6>Command:</h6>
-        {!execCmd && <span>No command?!?!</span>}
-        {execCmd && <span>{execCmd.join(' ')}</span>}
-
-        <h6 className="!mt-7">Server(s):</h6>
-        <span>WebCliGui Server</span>
-      </div>
-
-      <WaitAndError fetchAndError={submitOperationFetchAndError} />
-      {!!operationStatus && (
-        <div>
-          <h5>Status:</h5>
-          <div className="grid grid-cols-[75px_1fr]">
-            <div>uuid</div><div>{operationStatus.uuid}</div>
-            <div>status</div><div>{operationStatus.status}</div>
-            <div>start time</div><div>{operationStatus.startTime.toLocaleString()}</div>
-            <div>folder</div><div>{operationStatus.folder}</div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
@@ -408,7 +77,7 @@ const CreationViews = () => {
 };
 
 const CreateTask = () => {
-const { getLibraryOperators } = useDataStore(state => state.createTask);
+  const { getLibraryOperators } = useDataStore(state => state.createTask);
 
   useEffect(() => {
     getLibraryOperators();
