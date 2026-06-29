@@ -4,10 +4,17 @@ from dataclasses import asdict
 import importlib
 import json
 import os
-from django.http import HttpResponseForbidden, HttpResponseNotFound, JsonResponse, HttpResponse, HttpResponseBadRequest, HttpResponseServerError
+from time import sleep
+from django.conf import settings
+from django.contrib.auth import authenticate
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseServerError
+from django.http import HttpResponseForbidden, HttpResponseNotFound, JsonResponse
 from django.utils.html import escape
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from .constants import OPERATION_ROOT_DIRECTORY
 from .models import LibraryRegistration, Status
 from .OperationHandling import OperationHandling
@@ -53,7 +60,76 @@ def to_json_safe(obj):
         return {key: to_json_safe(value) for key, value in obj.items()}
     return obj
 
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def login(request):
+  try:
+    body = json.loads(request.body)
+    username = body.get('username')
+    password = body.get('password')
+    user = authenticate(request, username=username, password=password)
+    if user is None:
+      return HttpResponse('Invalid username/password', status=401)
+
+    refresh = RefreshToken.for_user(user)
+    response = JsonResponse({'access': str(refresh.access_token)})
+    refresh_lifetime = settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME']
+    response.set_cookie(
+      'refresh_token',
+      str(refresh),
+      max_age=int(refresh_lifetime.total_seconds()),
+      httponly=True,
+      secure=False,  # Set to False temporarely until we use https
+      samesite='Strict',
+    )
+    return response
+
+  except Exception as exc:
+    print('login(), exception:', exc)
+    return HttpResponseServerError(str(exc))
+
+@api_view(['POST'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def logout(request):
+  try:
+    raw_refresh = request.COOKIES.get('refresh_token')
+    if raw_refresh:
+      token = RefreshToken(raw_refresh)
+      token.blacklist()
+    response = JsonResponse({'detail': 'logged out'})
+    response.delete_cookie('refresh_token')
+    return response
+  
+  except TokenError:
+    response = JsonResponse({'detail': 'logged out'})
+    response.delete_cookie('refresh_token')
+    return response
+  except Exception as exc:
+    print('logout(), exception:', exc)
+    return HttpResponseServerError(str(exc))
+
 @api_view(['GET'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def get_access_token(request):
+  try:
+    raw_refresh = request.COOKIES.get('refresh_token')
+    if not raw_refresh:
+      return HttpResponseForbidden('No refresh token cookie')
+    refresh = RefreshToken(raw_refresh)
+    return JsonResponse({'access': str(refresh.access_token)})
+
+  except TokenError as exc:
+    return HttpResponseForbidden(str(exc))
+  except Exception as exc:
+    print('get_access_token(), exception:', exc)
+    return HttpResponseServerError(str(exc))
+
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def get_operation_hierarchy(request):
   try:
     load_library_apis()
@@ -68,7 +144,7 @@ def get_operation_hierarchy(request):
   
   except Exception as exc:
      print('get_operation_hierarchy(), exception:', exc)
-     return HttpResponseServerError(exc)
+     return HttpResponseServerError(str(exc))
 
 def getLibraryApi(libraryName):
   global libraryApiImpl, library2Idx
@@ -82,8 +158,8 @@ def getLibraryApi(libraryName):
   return libraryApiImpl
 
 @api_view(['POST'])
-@authentication_classes([])
-@permission_classes([AllowAny])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def get_description(request):
   try:
     body = json.loads(request.body)
@@ -103,11 +179,11 @@ def get_description(request):
   
   except Exception as exc:
      print('get_description(), exception:', exc)
-     return HttpResponseServerError(exc)
+     return HttpResponseServerError(str(exc))
 
 @api_view(['POST'])
-@authentication_classes([])
-@permission_classes([AllowAny])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def get_parameters(request):
   try:
     body = json.loads(request.body)
@@ -127,22 +203,22 @@ def get_parameters(request):
 
   except Exception as exc:
      print('get_parameters(), exception:', exc)
-     return HttpResponseServerError(exc)
+     return HttpResponseServerError(str(exc))
 
 @api_view(['POST'])
-@authentication_classes([])
-@permission_classes([AllowAny])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def submit_operation(request):
   try:
     body = json.loads(request.body)
-    libraryName = body["operationBranch"][0]
+    libraryName = body["operation_branch"][0]
     libraryApiImpl = getLibraryApi(libraryName)
     if not libraryApiImpl:
       errMsg = f'Libraryname "{libraryName}" not known!'
       print('api.py--submit_operation():', errMsg)
       return HttpResponseBadRequest(errMsg)
 
-    operationBranch = body["operationBranch"]
+    operationBranch = body["operation_branch"]
     command = body['command']
     servers = body["servers"]
 
@@ -161,11 +237,11 @@ def submit_operation(request):
 
   except Exception as exc:
      print('submit_operation(), exception:', exc)
-     return HttpResponseServerError(exc)
+     return HttpResponseServerError(str(exc))
 
 @api_view(['GET'])
-@authentication_classes([])
-@permission_classes([AllowAny])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def get_operation_status_list(request):
   try:
     offset = int(request.query_params.get("offset", 0))
@@ -176,7 +252,7 @@ def get_operation_status_list(request):
     num_status = qs.count()
 
     data = {
-        "num_status": num_status,
+        "total_num_status": num_status,
         "offset": offset,
         "status_data": [
             {
@@ -195,11 +271,11 @@ def get_operation_status_list(request):
 
   except Exception as exc:
      print('get_operation_status_list(), exception:', exc)
-     return HttpResponseServerError(exc)
+     return HttpResponseServerError(str(exc))
 
 @api_view(['GET'])
-@authentication_classes([])
-@permission_classes([AllowAny])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def folder_access(request, path):
   try:
     full_path = (OPERATION_ROOT_DIRECTORY / path).resolve()
@@ -228,4 +304,4 @@ def folder_access(request, path):
   
   except Exception as exc:
      print('folder_access(), exception:', exc)
-     return HttpResponseServerError(exc)
+     return HttpResponseServerError(str(exc))

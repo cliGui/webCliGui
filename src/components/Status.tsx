@@ -8,30 +8,28 @@ import {
 } from './constants';
 import WaitAndError from './regalia/WaitAndError';
 import Button from './regalia/Button';
+import { AuthenticationState } from '@store/authentication/authenticationIf';
 
 const NUM_COLS = 5;
 const NUM_OPERATION_STATUS_PER_PAGE = 25;
 const REFRESH_INTERVAL = 15000;
 
 const RefreshButtons = () => {
+  const { authenticationState } = useDataStore(state => state.authentication);
   const {
     operationStatusList,
+    totalNumOperationStatus,
     isAutomaticRefresh,
     automaticRefreshTimer,
 
     getOperationStatusList,
     toggleAutomaticRefresh,
     setAutomaticRefreshTimer,
-  } = useDataStore(store => store.operationStatus);
+  } = useDataStore(state => state.operationStatus);
 
   const onRefresh = () => {
-    let numStatus = operationStatusList.length;
-    const numPages = Math.ceil(numStatus / NUM_OPERATION_STATUS_PER_PAGE);
-    const numStatusForNumPages = numPages * NUM_OPERATION_STATUS_PER_PAGE;
-    if (numStatus < numStatusForNumPages) {
-      numStatus = numStatusForNumPages;
-    }
-    getOperationStatusList(0, numStatus);
+    const numPages = Math.floor(operationStatusList.length / NUM_OPERATION_STATUS_PER_PAGE) + 1;
+    getOperationStatusList(0, numPages * NUM_OPERATION_STATUS_PER_PAGE, true);
   };
 
   useEffect(() => {
@@ -44,15 +42,17 @@ const RefreshButtons = () => {
     }
   }, [isAutomaticRefresh]);
 
+  const isDisabled = authenticationState !== AuthenticationState.Authenticated;
+
   return (
     <div className="flex flex-row justify-end gap-4 items-center mb-3">
       <div className="flex flex-row items-center gap-2">
         <span>Automatic refresh</span>
         <input type="checkbox" name="toggleAutomaticRefresh" checked={isAutomaticRefresh} 
-               onChange={toggleAutomaticRefresh}/>
+               onChange={toggleAutomaticRefresh} disabled={isDisabled} />
       </div>
 
-      <Button onClick={onRefresh}>
+      <Button onClick={onRefresh} disabled={isDisabled}>
         Refresh
       </Button>
     </div>
@@ -60,22 +60,25 @@ const RefreshButtons = () => {
 };
 
 const MoreButton = () => {
+  const { authenticationState } = useDataStore(state => state.authentication);
   const {
     operationStatusList,
-    numOperationStatus,
+    totalNumOperationStatus,
     getOperationStatusList,
-   } = useDataStore(store => store.operationStatus);
+   } = useDataStore(state => state.operationStatus);
 
   const onMoreClick = () => {
     const numPages = Math.floor(operationStatusList.length / NUM_OPERATION_STATUS_PER_PAGE);
     const nextNumStatus = (numPages + 1) * NUM_OPERATION_STATUS_PER_PAGE;
-    getOperationStatusList(operationStatusList.length, nextNumStatus);
+    getOperationStatusList(operationStatusList.length, nextNumStatus, true);
   };
+
+  const isDisabled = authenticationState !== AuthenticationState.Authenticated;
 
   return (
     <>
-      {operationStatusList.length < numOperationStatus &&
-        <Button className="w-20 !my-3" onClick={onMoreClick}>
+      {operationStatusList.length < totalNumOperationStatus &&
+        <Button className="w-20 !my-3" onClick={onMoreClick} disabled={isDisabled}>
           More
         </Button>}
     </>
@@ -110,7 +113,7 @@ const StatusTable = () => {
   const {
     operationStatusList,
     getOperationStatusListFetchAndError,
-   } = useDataStore(store => store.operationStatus);
+   } = useDataStore(state => state.operationStatus);
 
   return (
     <table className={TABLE_CLASSNAME}>
@@ -150,15 +153,17 @@ const StatusTable = () => {
 };
 
 const Status = () => {
+  const { authenticationState } = useDataStore(state => state.authentication);
   const {
     getOperationStatusListFetchAndError,
-
     getOperationStatusList,
-   } = useDataStore(store => store.operationStatus);
+   } = useDataStore(state => state.operationStatus);
 
    useEffect(() => {
-    getOperationStatusList(0, NUM_OPERATION_STATUS_PER_PAGE);
-   }, []);
+    if (authenticationState === AuthenticationState.Authenticated) {
+      getOperationStatusList(0, NUM_OPERATION_STATUS_PER_PAGE);
+    }
+   }, [authenticationState]);
 
    return (
     <div className="flex flex-col">

@@ -1,16 +1,12 @@
 import React from "react";
 import Tree from 'rc-tree';
 import Markdown from 'react-markdown';
-import { Operation, OperationType } from '@store/operationTypes';
+import { Operation, OperationType } from '@store/types/operationTypes';
 import { useDataStore } from "@store/dataStore";
 import { FetchState } from "@utils/fetchData";
 import WaitAndError from "../regalia/WaitAndError";
 
-interface OperationSelectionProps {
-  isVisible: boolean;
-}
-
-const OperationSelection = ({ isVisible }: OperationSelectionProps) => {
+const OperationSelection = () => {
   const {
     selectedOperationType,
     setSelectedOperationType,
@@ -32,7 +28,7 @@ const OperationSelection = ({ isVisible }: OperationSelectionProps) => {
   }
 
   return (
-    <div className={`flex flex-row ${!isVisible && 'invisible w-0 h-0'}`}>
+    <div className="flex flex-row">
       <div className="flex flex-col w-40" >
         <h4>Operations</h4>
         <label htmlFor="operationTypeSelector">Operation Type:</label>
@@ -44,8 +40,8 @@ const OperationSelection = ({ isVisible }: OperationSelectionProps) => {
           <option value={OperationType.Python}>Python</option>
         </select>
         <WaitAndError fetchAndError={getLibraryOperatorsFetchAndError} />
-        {taskTrees.length > 0 && <Tree treeData={taskTrees} showLine onSelect={onSelect}/>}
-        {taskTrees.length === 0 && getLibraryOperatorsFetchAndError.fetchStatus !== FetchState.Loading &&
+        {taskTrees.length > 0 && <Tree treeData={taskTrees} defaultExpandAll showLine onSelect={onSelect}/>}
+        {taskTrees.length === 0 && getLibraryOperatorsFetchAndError.fetchStatus === FetchState.Success &&
           <span>No operations for this operation type</span>}
       </div>
       <div>

@@ -2,23 +2,17 @@ import React from "react";
 import { useDataStore } from "@store/dataStore";
 import WaitAndError from "../regalia/WaitAndError";
 
-interface PreviewProps {
-  isVisible: boolean;
-}
-
-const Preview = ({
-  isVisible,
-}: PreviewProps) => {
+const Preview = () => {
   const {
     getExecuteCommand,
     submitOperationFetchAndError,
     operationStatus,
-  } = useDataStore(store => store.createTask);
+  } = useDataStore(state => state.createTask);
 
   const execCmd = getExecuteCommand();
 
   return (
-    <div className={`flex flex-row ${!isVisible && 'invisible w-0 h-0'}`}>
+    <div className="flex flex-row">
       <div className="flex flex-col w-[500px]">
         <h6>Command:</h6>
         {!execCmd && <span>No command?!?!</span>}

@@ -1,14 +1,15 @@
 import { FetchStatus, FetchStatusAndError } from "@utils/fetchData";
-import { OperationStatus } from "./operationTypes";
+import { OperationStatus } from "../types/operationTypes";
 
 export interface OperationStatusIf {
   operationStatusList: OperationStatus[];
-  numOperationStatus: number;
+  totalNumOperationStatus: number;
   getOperationStatusListFetchAndError: FetchStatusAndError;
   isAutomaticRefresh: boolean;
   automaticRefreshTimer: number;
   
-  getOperationStatusList: (offset: number, limit: number) => Promise<FetchStatus>;
+  getOperationStatusList: (offset: number, limit: number, reload?: boolean) => Promise<FetchStatus>;
   toggleAutomaticRefresh: () => void;
   setAutomaticRefreshTimer: (timer: number) => void;
+  operationStatusReset: () => void;
 }

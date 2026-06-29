@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
-import { Operation } from '@store/operationTypes';
+import { Operation } from '@store/types/operationTypes';
 import {
   ParameterBase, ParameterOptionsToList, ParameterPreference, ParameterStringValue, ParameterType,
-} from '@store/parameterTypes';
+} from '@store/types/parameterTypes';
 import { useDataStore } from "@store/dataStore";
 import { FetchState } from "@utils/fetchData";
 import WaitAndError from "../regalia/WaitAndError";
@@ -154,11 +154,7 @@ const Parameter = ({
   return null;
 };
 
-interface OperationParametersProps {
-  isVisible: boolean;
-}
-
-const OperationParameters = ({ isVisible }: OperationParametersProps) => {
+const OperationParameters = () => {
   const {
     selectedOperationBranch,
     loadParametersFetchAndError,
@@ -178,13 +174,11 @@ const OperationParameters = ({ isVisible }: OperationParametersProps) => {
   }, [selectedOperation]);
 
   if (!selectedOperation) {
-    return <div className={`${!isVisible && 'invisible w-0 h-0'}`}>
-      No operation selected?!?!
-    </div>
+    return <div>No operation selected?!?!</div>
   }
 
   return (
-    <div className={`${!isVisible && 'invisible w-0 h-0'}`}>
+    <>
       <div className="grid grid-cols-[50px_175px_225px_auto] gap-2 items-center">
         <div className="justify-self-center">Select</div>
         <div>Parameter</div>
@@ -198,7 +192,7 @@ const OperationParameters = ({ isVisible }: OperationParametersProps) => {
       {loadParametersFetchAndError.fetchStatus === FetchState.Success && !selectedOperation.parameters &&
           <div>No parameters needed</div>}
       <div className="mt-10 text-xs italic">*: Mandatory parameters need to be filled in</div>
-    </div>
+    </>
   );
 };
 

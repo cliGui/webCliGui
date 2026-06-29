@@ -1,14 +1,15 @@
 import { StateCreator  } from 'zustand';
-import { GetFunction, SetFunction } from './dataStoreTypes';
+import { GetFunction, SetFunction } from '../dataStoreTypes';
 import { CreateTaskIf } from "./createTaskIf";
-import { DataStoreIf } from './dataStoreIf';
-import fetchData, { FetchState, FetchStatus, FetchStatusAndError } from '@utils/fetchData';
+import { DataStoreIf } from '../dataStoreIf';
+import fetchData, { FetchState, FetchStatus, FetchStatusAndError, handleFetchStatusAndError, initFetchStatusAndError } from '@utils/fetchData';
 import deepDiff from '@utils/deepDiff';
 import { TaskCreationSteps, TreeNode, WEB_CLI_GUI_SERVER } from './createTaskIf';
-import { OperationBase, Operation, OperationType, OperationFolder, OperationStatus } from './operationTypes';
-import { ParameterType, ParameterValue, ParameterBase, ParameterPreference, 
+import { OperationBase, Operation, OperationType, OperationFolder, OperationStatus } from '../types/operationTypes';
+import { OperationBranchJson, OperationFolderJson, OperationStatusJson, SubmitOperationJson } from '../types/operationTypesJson';
+import { ParameterType, ParameterValue, ParameterBase, ParameterPreference,
   ParameterStringValue, ParameterList, ParameterOptionsToList, ParameterData,
- } from './parameterTypes';
+ } from '../types/parameterTypes';
 
 const loadOperationFolder = (folder: OperationFolderJson): OperationFolder => {
   const operationFolder: OperationFolder = {
@@ -108,13 +109,12 @@ const getFilterLibraryFolders = (get: GetFunction, set: SetFunction) => {
 }
 
 const doGetLibraryOperators = async (get: GetFunction, set: SetFunction) => {
-  if (get().createTask.getLibraryOperatorsFetchAndError.fetchStatus !== FetchState.Idle) {
-    return FetchState.Idle;
-  }
-  
-  const setFandE = (fandE: FetchStatusAndError, fAndEText: string) =>
-    set(state => { state.createTask.getLibraryOperatorsFetchAndError = fandE }, false, 
-      `getLibraryOperators_${fAndEText}`);
+  const handleFandE = handleFetchStatusAndError(
+    () => get().createTask.getLibraryOperatorsFetchAndError,
+    (fandE: FetchStatusAndError, fAndEText: string) =>
+      set(state => { state.createTask.getLibraryOperatorsFetchAndError = fandE }, false, 
+        `getLibraryOperators_${fAndEText}`)
+  );
 
   const setData = (data: OperationFolderJson[]) => {
     const libraryFolders: OperationFolder[] = [];
@@ -130,10 +130,13 @@ const doGetLibraryOperators = async (get: GetFunction, set: SetFunction) => {
     getFilterLibraryFolders(get, set);
   };
 
+  const accessToken = get().authentication.accessToken;
+
   return await fetchData<OperationFolderJson[]>(
     '/api/get-operation-hierarchy',
     {
-      setFandE,
+      accessToken,
+      handleFandE,
       setData,
     }
   );
@@ -224,13 +227,14 @@ const doSetSelectedOperation = async (operationPos: string, get: GetFunction, se
 };
 
 const doGetDescription = async (operationBranch: string[], get: GetFunction, set: SetFunction) => {
-  const setFandE = (fandE: FetchStatusAndError, fAndEText: string) =>
-    set(state => { state.createTask.getDescriptionFetchAndError = fandE }, false, 
-      `getDescription_${fAndEText}`);
+  const handleFandE = handleFetchStatusAndError(
+    () => get().createTask.getDescriptionFetchAndError,
+    (fandE: FetchStatusAndError, fAndEText: string) =>
+      set(state => { state.createTask.getDescriptionFetchAndError = fandE }, false, 
+        `getDescription_${fAndEText}`)
+  );
   
   const setData = (data: string) => {
-    console.log('data:', data);
-
     set(state => {
       const libraryFolders = state.createTask.libraryFolders;
       const operation = getOperationFromBranch(libraryFolders, operationBranch);
@@ -238,39 +242,34 @@ const doGetDescription = async (operationBranch: string[], get: GetFunction, set
     }, false, 'getDescription');
   };
 
-  interface OperationBranch {
-    operationBranch: string[];
-  }
-  const postData: OperationBranch = { operationBranch };
+  const postData: OperationBranchJson = { operationBranch };
 
-  return await fetchData<string, OperationBranch>(
+  const accessToken = get().authentication.accessToken;
+
+  return await fetchData<string, OperationBranchJson>(
     '/api/get-description',
     {
-      setFandE,
+      accessToken,
+      handleFandE,
       postData,
       setData,
+      reload: true,
     }
   );
 };
 
 const doLoadParameters = async (get: GetFunction, set: SetFunction) => {
-  if (get().createTask.loadParametersFetchAndError.fetchStatus === FetchState.Loading) {
-    return FetchState.Loading;
-  }
-
-  const setFandE = (fandE: FetchStatusAndError, fAndEText: string) =>
-    set(state => { state.createTask.loadParametersFetchAndError = fandE }, false, 
-      `loadParameters_${fAndEText}`);
+  const handleFandE = handleFetchStatusAndError(
+    () => get().createTask.loadParametersFetchAndError,
+    (fandE: FetchStatusAndError, fAndEText: string) =>
+      set(state => { state.createTask.loadParametersFetchAndError = fandE }, false, 
+        `loadParameters_${fAndEText}`)
+  );
 
   const operationBranch = get().createTask.selectedOperationBranch!;
-  interface OperationBranch {
-    operationBranch: string[];
-  }
-  const postData: OperationBranch = { operationBranch };
+  const postData: OperationBranchJson = { operationBranch };
   
   const setData = (data: ParameterData) => {
-    console.log('parameterData:', data);
-
     set(state => {
       const libraryFolders = state.createTask.libraryFolders;
       const operation = getOperationFromBranch(libraryFolders, operationBranch);
@@ -278,12 +277,16 @@ const doLoadParameters = async (get: GetFunction, set: SetFunction) => {
     }, false, 'loadParameters');
   };
 
-  return await fetchData<ParameterData, OperationBranch>(
+  const accessToken = get().authentication.accessToken;
+
+  return await fetchData<ParameterData, OperationBranchJson>(
     '/api/get-parameters',
     {
-      setFandE,
+      accessToken,
+      handleFandE,
       postData,
       setData,
+      reload: true,
     }
   );
 };
@@ -459,20 +462,18 @@ const doGetExecuteCommand = (get: GetFunction) => {
 const doSubmitOperation = async (get: GetFunction, set: SetFunction) => {
   set(state => { state.createTask.operationStatus = null }, false, 'submitOperation_Init');
 
-  const setFandE = (fandE: FetchStatusAndError, fAndEText: string) =>
-    set(state => { state.createTask.submitOperationFetchAndError = fandE }, false, 
-      `submitOperation_${fAndEText}`);
+  const handleFandE = handleFetchStatusAndError(
+    () => get().createTask.submitOperationFetchAndError,
+    (fandE: FetchStatusAndError, fAndEText: string) =>
+      set(state => { state.createTask.submitOperationFetchAndError = fandE }, false, 
+        `submitOperation_${fAndEText}`)
+  );
 
   const operationBranch = get().createTask.selectedOperationBranch as string[];
   const cmd = doGetExecuteCommand(get) as string[];
 
-  interface SubmitOperation {
-    operationBranch: string[];
-    command: string[];
-    servers: string[];
-  }
-  const postData: SubmitOperation = 
-    { operationBranch: operationBranch, command: cmd, servers: [WEB_CLI_GUI_SERVER] };
+  const postData: SubmitOperationJson = 
+    { operation_branch: operationBranch, command: cmd, servers: [WEB_CLI_GUI_SERVER] };
 
   const setData = (data: OperationStatusJson) => {
     const operationStatus: OperationStatus = {
@@ -487,15 +488,43 @@ const doSubmitOperation = async (get: GetFunction, set: SetFunction) => {
     set(state => { state.createTask.operationStatus = operationStatus }, false, 'submitOperation');
   };
   
-  return await fetchData<OperationStatusJson, SubmitOperation>(
+  const accessToken = get().authentication.accessToken;
+
+  return await fetchData<OperationStatusJson, SubmitOperationJson>(
     '/api/submit-operation',
     {
-      setFandE,
+      accessToken,
+      handleFandE,
       postData,
       setData,
+      reload: true,
     }
   );
 }
+
+const doCreateTaskReset = async (get: GetFunction, set: SetFunction) => {
+  const createTask = get().createTask;
+  await Promise.all([
+    createTask.getLibraryOperatorsFetchAndError.abort(),
+    createTask.getDescriptionFetchAndError.abort(),
+    createTask.loadParametersFetchAndError.abort(),
+    createTask.submitOperationFetchAndError.abort(),
+  ]);
+
+  set(state => {
+    state.createTask.libraryFolders = [];
+    state.createTask.filteredLibraryFolders = [];
+    state.createTask.taskTrees = [];
+    state.createTask.taskCreationStep = TaskCreationSteps.OperatorSelection;
+    state.createTask.selectedOperationType = OperationType.Pipx;
+    state.createTask.selectedOperationBranch = null;
+    state.createTask.operationStatus = null;
+    state.createTask.getLibraryOperatorsFetchAndError = initFetchStatusAndError();
+    state.createTask.getDescriptionFetchAndError = initFetchStatusAndError();
+    state.createTask.loadParametersFetchAndError = initFetchStatusAndError();
+    state.createTask.submitOperationFetchAndError = initFetchStatusAndError();
+  }, false, 'createTaskReset');
+};
 
 export const createTaskSlice: StateCreator<
   DataStoreIf,
@@ -510,26 +539,10 @@ export const createTaskSlice: StateCreator<
   selectedOperationType: OperationType.Pipx,
   selectedOperationBranch: null,
   operationStatus: null,
-  getLibraryOperatorsFetchAndError: {
-    fetchStatus: FetchState.Idle,
-    error: null,
-    errorDetail: null,
-  },
-  getDescriptionFetchAndError: {
-    fetchStatus: FetchState.Idle,
-    error: null,
-    errorDetail: null,
-  },
-  loadParametersFetchAndError: {
-    fetchStatus: FetchState.Idle,
-    error: null,
-    errorDetail: null,
-  },
-  submitOperationFetchAndError: {
-    fetchStatus: FetchState.Idle,
-    error: null,
-    errorDetail: null,
-  },
+  getLibraryOperatorsFetchAndError: initFetchStatusAndError(),
+  getDescriptionFetchAndError: initFetchStatusAndError(),
+  loadParametersFetchAndError: initFetchStatusAndError(),
+  submitOperationFetchAndError: initFetchStatusAndError(),
 
   getLibraryOperators: async () => await doGetLibraryOperators(get, set),
   setSelectedOperationType: (operationType: OperationType) => doSetSelectedOperationType(operationType, get, set),
@@ -541,4 +554,5 @@ export const createTaskSlice: StateCreator<
   setParameterValue: (parameterBranch: number[], value: ParameterValue) => doSetParameterValue(parameterBranch, value, get, set),
   getExecuteCommand: () => doGetExecuteCommand(get),
   submitOperation: () => doSubmitOperation(get, set),
+  createTaskReset: () => doCreateTaskReset(get, set),
 });

@@ -84,44 +84,63 @@ export interface FetchStatusAndError {
   fetchStatus: FetchStatus;
   error: string | null;
   errorDetail: string | null;
+  abortController: AbortController | null;
+  abort: () => Promise<void>;
 }
 
-export type SetFetchStatusAndError = (fAndE: FetchStatusAndError, fAndEText: string) => void;
-
-export interface HandleAbortController {
-  get: () => AbortController;
-  set: (ctrl: AbortController | null) => void;
-}
-
-export const handleAbort = async (get: () => AbortController, 
-                                  set: (ctrl: AbortController | null) => void): Promise<HandleAbortController> => {
-  const handleAbortController: HandleAbortController = { get, set };
-  let abortController = get();
+const abortFetch = async (abortController: AbortController | null) => {
   if (abortController) {
     abortController.abort(new Error('Interupted'));
     await sleep();  // Skip the current render cycle
   }
-  set(new AbortController());
-
-  return handleAbortController;
 }
 
+export const initFetchStatusAndError = () => ({
+  fetchStatus: FetchState.Idle,
+  error: null,
+  errorDetail: null,
+  abortController: null,
+  abort: async function() { await abortFetch(this.abortController) },
+});
+
+export interface HandleFetchStatusAndError {
+  get: () => FetchStatusAndError;
+  set: (fAndE: FetchStatusAndError, fAndEText: string) => void;
+}
+
+export const handleFetchStatusAndError = (
+    get: () => FetchStatusAndError,
+    set: (fAndE: FetchStatusAndError, fAndEText: string) => void,
+  ) => ({ get, set} as HandleFetchStatusAndError);
+
 export interface FetchDataOptions<D, P = void> {
-  setFandE: SetFetchStatusAndError,
+  handleFandE: HandleFetchStatusAndError,
   accessToken?: string;
   searchParameters?: {[key: string]: string | number | undefined}[],
   setData?: (data: D) => void;
   postData?: P;
-  handleAbortController?: HandleAbortController;
+  reload?: boolean;
 }
 
 const fetchData = async <D, P = void>(url: string, options: FetchDataOptions<D, P>): Promise<FetchStatus> => {
+  let fAndE = options.handleFandE.get();
+  if (!options.reload && fAndE.fetchStatus === FetchState.Success) {
+    return fAndE.fetchStatus;
+  }
+
   try {
-    options.setFandE({
+  // Abort previous running fetch
+  await abortFetch(fAndE.abortController);
+
+  fAndE = options.handleFandE.get();
+  fAndE = {
+      ...fAndE,
       fetchStatus: FetchState.Loading,
       error: null,
       errorDetail: null,
-    }, FetchState.Loading);
+      abortController: new AbortController(),
+    };
+    options.handleFandE.set(fAndE, FetchState.Loading);
 
     if (options.searchParameters) {
       const searchParams = new URLSearchParams();
@@ -135,7 +154,7 @@ const fetchData = async <D, P = void>(url: string, options: FetchDataOptions<D, 
     }
 
     const fetchOptions: RequestInit  = {
-      method: options.postData ? 'POST' : 'GET',
+      method: Object.hasOwn(options, 'postData') ? 'POST' : 'GET',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -147,9 +166,8 @@ const fetchData = async <D, P = void>(url: string, options: FetchDataOptions<D, 
     if (options.postData) {
       fetchOptions.body = JSON.stringify(options.postData);
     }
-    if (options.handleAbortController) {
-      fetchOptions.signal = options.handleAbortController.get().signal;
-    }
+
+    fetchOptions.signal = fAndE.abortController!.signal;
 
     const result = await fetch(url, fetchOptions);
     if (!result.ok) {
@@ -159,25 +177,31 @@ const fetchData = async <D, P = void>(url: string, options: FetchDataOptions<D, 
     const jsonData = await result.json();
     if (options.setData) options.setData(jsonData);
 
-    options.setFandE({
+    fAndE = options.handleFandE.get();
+    fAndE = {
+      ...fAndE,
       fetchStatus: FetchState.Success,
       error: null,
       errorDetail: null,
-    }, FetchState.Success);
+      abortController: null,
+    };
+    options.handleFandE.set(fAndE, FetchState.Success);
 
     return FetchState.Success;
+
   } catch (err) {
     console.error(`fetchData(), error occured: ${(err as Error).message}`);
-    options.setFandE({
+
+    fAndE = options.handleFandE.get();
+    fAndE = {
+      ...fAndE,
       fetchStatus: FetchState.Error,
       error: 'Error Fetching data',
       errorDetail: (err as Error).message,
-    }, FetchState.Error);
+      abortController: null,
+    };
+    options.handleFandE.set(fAndE, FetchState.Error);
     return FetchState.Error;
-  } finally {
-    if (options.handleAbortController) {
-      options.handleAbortController.set(null);
-    }
   }
 };
 

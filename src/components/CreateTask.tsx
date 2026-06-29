@@ -1,11 +1,12 @@
 import React, { useEffect } from "react";
-import { TaskCreationSteps } from "@store/createTaskIf";
+import { TaskCreationSteps } from "@store/createTask/createTaskIf";
 import { useDataStore } from "@store/dataStore";
 import Button from "./regalia/Button";
 import OperationSelection from "./createTaskSteps/OperationSelection";
 import OperationParameters from "./createTaskSteps/OperationParameters";
 import SelectServers from "./createTaskSteps/SelectServers";
 import Preview from "./createTaskSteps/Preview";
+import { AuthenticationState } from "@store/authentication/authenticationIf";
 
 const CreationSteps = () => {
   const {
@@ -66,22 +67,23 @@ const CreationSteps = () => {
 const CreationViews = () => {
   const { taskCreationStep } = useDataStore(state => state.createTask);
 
-  return (
-    <>
-      <OperationSelection isVisible={taskCreationStep === TaskCreationSteps.OperatorSelection} />
-      <OperationParameters isVisible={taskCreationStep === TaskCreationSteps.Parameters} />
-      <SelectServers isVisible={taskCreationStep === TaskCreationSteps.ServersSelection} />
-      <Preview isVisible={taskCreationStep === TaskCreationSteps.Preview} />
-    </>
-  );
+  switch (taskCreationStep) {
+    case TaskCreationSteps.OperatorSelection: return <OperationSelection />;
+    case TaskCreationSteps.Parameters: return <OperationParameters />;
+    case TaskCreationSteps.ServersSelection: return <SelectServers />;
+    case TaskCreationSteps.Preview: return <Preview />;
+  }
 };
 
 const CreateTask = () => {
+  const { authenticationState } = useDataStore(state => state.authentication);
   const { getLibraryOperators } = useDataStore(state => state.createTask);
 
   useEffect(() => {
-    getLibraryOperators();
-  }, []);
+    if (authenticationState === AuthenticationState.Authenticated) {
+      getLibraryOperators();
+    }
+  }, [authenticationState]);
 
   return (
     <div className="flex flex-col">

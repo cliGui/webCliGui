@@ -1,18 +1,12 @@
 import React from "react";
-import { WEB_CLI_GUI_SERVER } from "@store/createTaskIf";
+import { WEB_CLI_GUI_SERVER } from "@store/createTask/createTaskIf";
 import Button from "../regalia/Button";
 
-interface SelectServersProps {
-  isVisible: boolean;
-}
-
-const SelectServers = ({
-  isVisible,
-}: SelectServersProps) => {
+const SelectServers = () => {
   return (
-    <div className={`flex flex-col gap-3 ${!isVisible && 'invisible w-0 h-0'}`}>
+    <div className="flex flex-col gap-3">
       <div className="flex items-center">
-        <input className="m-2" type="radio" name="serverSelection" id="webCliGuiServerRB" value="webCliGuiServer" checked />
+        <input className="m-2" type="radio" name="serverSelection" id="webCliGuiServerRB" value="webCliGuiServer" />
         <label htmlFor="webCliGuiServerRB">{WEB_CLI_GUI_SERVER}</label>
       </div>
       <div className="flex items-center">

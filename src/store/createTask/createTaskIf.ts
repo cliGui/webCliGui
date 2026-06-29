@@ -1,6 +1,6 @@
 import { FetchStatus, FetchStatusAndError } from "@utils/fetchData";
-import { Operation, OperationFolder, OperationStatus, OperationType } from "./operationTypes";
-import { ParameterValue } from "./parameterTypes";
+import { Operation, OperationFolder, OperationStatus, OperationType } from "../types/operationTypes";
+import { ParameterValue } from "../types/parameterTypes";
 
 export interface TreeNode {
   key: string;
@@ -40,4 +40,5 @@ export interface CreateTaskIf {
   setParameterValue: (parameterBranch: number[], value: ParameterValue) => void;
   getExecuteCommand: () => string[] | null;
   submitOperation: () => void;
+  createTaskReset: () => void;
 }

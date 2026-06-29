@@ -18,6 +18,7 @@ export default {
       '@utils': path.resolve(__dirname, 'src/utils'),
       '@components': path.resolve(__dirname, 'src/components'),
       '@store': path.resolve(__dirname, 'src/store'),
+      '@icons': path.resolve(__dirname, 'src/icons'),
     },
   },
   output: {
@@ -59,12 +60,6 @@ export default {
         },
       },
     ]
-  },
-
-  watchOptions: {
-    ignored: /node_modules/,
-    aggregateTimeout: 300,
-    poll: false,
   },
 
   devServer: {

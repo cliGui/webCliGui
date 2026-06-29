@@ -1,0 +1,22 @@
+import { FetchStatus, FetchStatusAndError } from "@utils/fetchData";
+
+export enum AuthenticationState {
+  Initialize = 'Initialize',
+  Authenticating = 'Authenticating',
+  Authenticated = 'Authenticated',
+  AuthenticationFailed = 'AuthenticationFailed',
+  LoggedOut = 'LoggedOut',
+}
+
+export interface AuthenticationIf {
+  authenticationState: AuthenticationState;
+  accessToken: string | undefined;
+  loginFetchAndError: FetchStatusAndError;
+  getAccessTokenFetchAndError: FetchStatusAndError;
+  logoutFetchAndError: FetchStatusAndError;
+
+  login: (username: string, password: string) => Promise<FetchStatus>;
+  clearLoginError: () => void;
+  getAccessToken: () => Promise<FetchStatus>;
+  logout: () => Promise<FetchStatus>;
+}
