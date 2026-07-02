@@ -7,7 +7,7 @@ import CreateTask from './CreateTask';
 import Status from './Status';
 import ErrorMessage from './regalia/ErrorMessage';
 import { AuthenticationState } from '@store/authentication/authenticationIf';
-import { FetchState } from '@utils/fetchData';
+import { FetchState } from '@store/fetchData';
 import WaitCircle from './regalia/WaitCircle';
 import handleOnce from '@utils/handleOnce';
 import { DataStoreIf } from '@store/dataStoreIf';

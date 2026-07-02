@@ -4,15 +4,10 @@ import { OperationStatusIf } from './operationStatusIf';
 import { DataStoreIf } from '../dataStoreIf';
 import { OperationStatus } from '../types/operationTypes';
 import { OperationStatusListDataJson } from '../types/operationTypesJson';
-import fetchData, { FetchStatus, FetchStatusAndError, handleFetchStatusAndError, initFetchStatusAndError } from '@utils/fetchData';
+import fetchData, { FetchStatus, handleFetchStatusAndError, initFetchStatusAndError } from '@store/fetchData';
 
 const doGetOperationStatusList = async (offset: number, limit: number, reload: boolean | undefined, get: GetFunction, set: SetFunction): Promise<FetchStatus> => {
-  const handleFandE = handleFetchStatusAndError(
-    () => get().operationStatus.getOperationStatusListFetchAndError,
-    (fandE: FetchStatusAndError, fAndEText: string) =>
-      set(state => { state.operationStatus.getOperationStatusListFetchAndError = fandE }, false, 
-        `getOperationStatusList_${fAndEText}`)
-  );
+  const handleFandE = handleFetchStatusAndError(get, set, ['operationStatus', 'getOperationStatusListFetchAndError'], 'getOperationStatusList');
 
   const setData = (rawData: OperationStatusListDataJson) => {
     const newOperationStatusList = [...get().operationStatus.operationStatusList];

@@ -4,7 +4,7 @@ import {
   ParameterBase, ParameterOptionsToList, ParameterPreference, ParameterStringValue, ParameterType,
 } from '@store/types/parameterTypes';
 import { useDataStore } from "@store/dataStore";
-import { FetchState } from "@utils/fetchData";
+import { FetchState } from "@store/fetchData";
 import WaitAndError from "../regalia/WaitAndError";
 
 interface ToggleParameterProps {

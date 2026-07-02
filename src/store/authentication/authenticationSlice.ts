@@ -2,18 +2,13 @@ import { StateCreator  } from 'zustand';
 import { GetFunction, SetFunction } from '../dataStoreTypes';
 import { DataStoreIf } from '../dataStoreIf';
 import { AuthenticationState, AuthenticationIf } from './authenticationIf';
-import fetchData, { FetchState, FetchStatus, FetchStatusAndError, handleFetchStatusAndError, initFetchStatusAndError } from '@utils/fetchData';
+import fetchData, { FetchState, FetchStatus, handleFetchStatusAndError, initFetchStatusAndError } from '@store/fetchData';
 
 const doLogin = async (get: GetFunction, set: SetFunction, username: string, password: string): Promise<FetchStatus> => {
+  const handleFandE = handleFetchStatusAndError(get, set, ['authentication', 'loginFetchAndError'], 'login');
+
   set(state => { state.authentication.authenticationState = AuthenticationState.Authenticating; },
       false, 'login_Authenticating');
-
-  const handleFandE = handleFetchStatusAndError(
-    () => get().authentication.loginFetchAndError,
-    (fandE: FetchStatusAndError, fAndEText: string) =>
-      set(state => { state.authentication.loginFetchAndError = fandE; }, false,
-        `login_${fAndEText}`)
-  );
 
   interface AccessTokenJson { access: string; }
 
@@ -40,15 +35,10 @@ const doLogin = async (get: GetFunction, set: SetFunction, username: string, pas
 };
 
 const doGetAccessToken = async (get: GetFunction, set: SetFunction): Promise<FetchStatus> => {
+  const handleFandE = handleFetchStatusAndError(get, set, ['authentication', 'getAccessTokenFetchAndError'], 'getAccessToken');
+
   set(state => { state.authentication.authenticationState = AuthenticationState.Authenticating; },
       false, 'getAccessToken_Authenticating');
-
-  const handleFandE = handleFetchStatusAndError(
-    () => get().authentication.getAccessTokenFetchAndError,
-    (fandE: FetchStatusAndError, fAndEText: string) =>
-      set(state => { state.authentication.getAccessTokenFetchAndError = fandE; }, false,
-        `getAccessToken_${fAndEText}`)
-  );
 
   interface AccessTokenJson {
     access: string;
@@ -70,6 +60,7 @@ const doGetAccessToken = async (get: GetFunction, set: SetFunction): Promise<Fet
     }
   );
 
+  // Also update authenticationState
   if (result === FetchState.Error) {
     set(state => { state.authentication.authenticationState = AuthenticationState.AuthenticationFailed; },
       false, 'getAccessToken_AuthenticationFailed');
@@ -79,11 +70,7 @@ const doGetAccessToken = async (get: GetFunction, set: SetFunction): Promise<Fet
 };
 
 const doLogout = async (get: GetFunction, set: SetFunction): Promise<FetchStatus> => {
-  const handleFandE = handleFetchStatusAndError(
-    () => get().authentication.logoutFetchAndError,
-    (fandE: FetchStatusAndError, fAndEText: string) =>
-      set(state => { state.authentication.logoutFetchAndError = fandE; }, false, `logout_${fAndEText}`)
-  );
+  const handleFandE = handleFetchStatusAndError(get, set, ['authentication', 'logoutFetchAndError'], 'logout');
 
   const setData = () => {
     set(state => {

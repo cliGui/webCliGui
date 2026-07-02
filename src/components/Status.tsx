@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useDataStore } from '@store/dataStore';
-import { FetchState } from '@utils/fetchData';
+import { FetchState } from '@store/fetchData';
 import {
   TABLE_CLASSNAME, THEAD_CLASSNAME, TBODY_CLASSNAME, TR_CLASSNAME, TH_CLASSNAME, TD_CLASSNAME,
   OPERATION_CLASSNAME, START_TIME_CLASSNAME, ELAPSED_TIME_CLASSNAME, STATUS_CLASSNAME,

@@ -1,5 +1,5 @@
 import React from "react";
-import { FetchStatusAndError, FetchState } from "@utils/fetchData";
+import { FetchStatusAndError, FetchState } from "@store/fetchData";
 import WaitCircle from "./WaitCircle";
 import ErrorMessage from "./ErrorMessage";
 

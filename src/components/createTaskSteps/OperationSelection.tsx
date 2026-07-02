@@ -3,7 +3,7 @@ import Tree from 'rc-tree';
 import Markdown from 'react-markdown';
 import { Operation, OperationType } from '@store/types/operationTypes';
 import { useDataStore } from "@store/dataStore";
-import { FetchState } from "@utils/fetchData";
+import { FetchState } from "@store/fetchData";
 import WaitAndError from "../regalia/WaitAndError";
 
 const OperationSelection = () => {

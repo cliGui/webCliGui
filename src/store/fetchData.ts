@@ -69,7 +69,8 @@
  *   );
  * 
  */
-import sleep from "./sleep";
+import sleep from "../utils/sleep";
+import { GetFunction, SetFunction } from "./dataStoreTypes";
 
 export const FetchState = {
   Idle: 'idle',
@@ -104,14 +105,32 @@ export const initFetchStatusAndError = () => ({
 });
 
 export interface HandleFetchStatusAndError {
-  get: () => FetchStatusAndError;
-  set: (fAndE: FetchStatusAndError, fAndEText: string) => void;
+  get: GetFunction;
+  set: SetFunction;
+  fAndEDesignator: string[];
+  intent: string;
 }
 
-export const handleFetchStatusAndError = (
-    get: () => FetchStatusAndError,
-    set: (fAndE: FetchStatusAndError, fAndEText: string) => void,
-  ) => ({ get, set} as HandleFetchStatusAndError);
+export const handleFetchStatusAndError = (get: GetFunction, set: SetFunction, fAndEDesignator: string[], intent: string) =>
+  ({ get, set, fAndEDesignator, intent } as HandleFetchStatusAndError);
+
+const getFAndE = (handleFAndE: HandleFetchStatusAndError) => {
+  const sAndE = handleFAndE.fAndEDesignator.reduce((obj: any, designator: string) => obj[designator], handleFAndE.get()) as FetchStatusAndError;
+  return sAndE;
+}
+
+const setFandE = (updatedSAndE: FetchStatusAndError, handleFandE: HandleFetchStatusAndError, fetchStatus: FetchStatus) =>
+  handleFandE.set(
+    state => {
+      const limitDesignators = handleFandE.fAndEDesignator.slice(0, -1);
+      const fAndEDesignator = handleFandE.fAndEDesignator[handleFandE.fAndEDesignator.length - 1];
+      const fAndEHolder = limitDesignators.reduce((obj: any, designator: string) => obj[designator], state);
+
+      fAndEHolder[fAndEDesignator] = updatedSAndE;
+    },
+    false, 
+    `${handleFandE.intent}_${fetchStatus}`
+  );
 
 export interface FetchDataOptions<D, P = void> {
   handleFandE: HandleFetchStatusAndError,
@@ -123,7 +142,7 @@ export interface FetchDataOptions<D, P = void> {
 }
 
 const fetchData = async <D, P = void>(url: string, options: FetchDataOptions<D, P>): Promise<FetchStatus> => {
-  let fAndE = options.handleFandE.get();
+  let fAndE = getFAndE(options.handleFandE);
   if (!options.reload && fAndE.fetchStatus === FetchState.Success) {
     return fAndE.fetchStatus;
   }
@@ -132,7 +151,7 @@ const fetchData = async <D, P = void>(url: string, options: FetchDataOptions<D, 
   // Abort previous running fetch
   await abortFetch(fAndE.abortController);
 
-  fAndE = options.handleFandE.get();
+  fAndE = getFAndE(options.handleFandE);
   fAndE = {
       ...fAndE,
       fetchStatus: FetchState.Loading,
@@ -140,7 +159,7 @@ const fetchData = async <D, P = void>(url: string, options: FetchDataOptions<D, 
       errorDetail: null,
       abortController: new AbortController(),
     };
-    options.handleFandE.set(fAndE, FetchState.Loading);
+    setFandE(fAndE, options.handleFandE, FetchState.Loading);
 
     if (options.searchParameters) {
       const searchParams = new URLSearchParams();
@@ -177,7 +196,7 @@ const fetchData = async <D, P = void>(url: string, options: FetchDataOptions<D, 
     const jsonData = await result.json();
     if (options.setData) options.setData(jsonData);
 
-    fAndE = options.handleFandE.get();
+    fAndE = getFAndE(options.handleFandE);
     fAndE = {
       ...fAndE,
       fetchStatus: FetchState.Success,
@@ -185,14 +204,14 @@ const fetchData = async <D, P = void>(url: string, options: FetchDataOptions<D, 
       errorDetail: null,
       abortController: null,
     };
-    options.handleFandE.set(fAndE, FetchState.Success);
+    setFandE(fAndE, options.handleFandE, FetchState.Success);
 
     return FetchState.Success;
 
   } catch (err) {
     console.error(`fetchData(), error occured: ${(err as Error).message}`);
 
-    fAndE = options.handleFandE.get();
+    fAndE = getFAndE(options.handleFandE);
     fAndE = {
       ...fAndE,
       fetchStatus: FetchState.Error,
@@ -200,7 +219,7 @@ const fetchData = async <D, P = void>(url: string, options: FetchDataOptions<D, 
       errorDetail: (err as Error).message,
       abortController: null,
     };
-    options.handleFandE.set(fAndE, FetchState.Error);
+    setFandE(fAndE, options.handleFandE, FetchState.Error);
     return FetchState.Error;
   }
 };

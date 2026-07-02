@@ -1,4 +1,4 @@
-import { FetchStatus, FetchStatusAndError } from "@utils/fetchData";
+import { FetchStatus, FetchStatusAndError } from "@store/fetchData";
 
 export enum AuthenticationState {
   Initialize = 'Initialize',

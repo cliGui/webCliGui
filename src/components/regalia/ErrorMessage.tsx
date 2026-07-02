@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FetchStatusAndError } from "@utils/fetchData";
+import { FetchStatusAndError } from "@store/fetchData";
 import Button from "./Button";
 
 interface ErrorMessageProps {
