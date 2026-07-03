@@ -11,6 +11,7 @@ export enum AuthenticationState {
 export interface AuthenticationIf {
   authenticationState: AuthenticationState;
   accessToken: string | undefined;
+  refreshAccessTokenTimeout: number;
   loginFetchAndError: FetchStatusAndError;
   getAccessTokenFetchAndError: FetchStatusAndError;
   logoutFetchAndError: FetchStatusAndError;
@@ -19,4 +20,5 @@ export interface AuthenticationIf {
   clearLoginError: () => void;
   getAccessToken: () => Promise<FetchStatus>;
   logout: () => Promise<FetchStatus>;
+  authenticationReset: () => void;
 }

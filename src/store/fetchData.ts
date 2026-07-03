@@ -92,7 +92,7 @@ export interface FetchStatusAndError {
 
 const abortFetch = async (abortController: AbortController | null, intent: string) => {
   if (abortController) {
-    abortController.abort(new Error('Interupted'));
+    abortController.abort(new Error(`${intent} interrupted`));
     await sleep();  // Skip the current render cycle
   }
 }

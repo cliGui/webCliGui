@@ -77,10 +77,11 @@ const CreationViews = () => {
 
 const CreateTask = () => {
   const { authenticationState } = useDataStore(state => state.authentication);
-  const { getLibraryOperators } = useDataStore(state => state.createTask);
+  const { libraryFolders, getLibraryOperators } = useDataStore(state => state.createTask);
 
   useEffect(() => {
-    if (authenticationState === AuthenticationState.Authenticated) {
+    if (authenticationState === AuthenticationState.Authenticated &&
+        libraryFolders.length === 0) {
       getLibraryOperators();
     }
   }, [authenticationState]);

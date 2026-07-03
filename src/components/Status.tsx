@@ -156,12 +156,14 @@ const StatusTable = () => {
 const Status = () => {
   const { authenticationState } = useDataStore(state => state.authentication);
   const {
+    operationStatusList,
     getOperationStatusListFetchAndError,
     getOperationStatusList,
    } = useDataStore(state => state.operationStatus);
 
    useEffect(() => {
-    if (authenticationState === AuthenticationState.Authenticated) {
+    if (authenticationState === AuthenticationState.Authenticated &&
+        operationStatusList.length === 0) {
       handleOnce(() => getOperationStatusList(0, NUM_OPERATION_STATUS_PER_PAGE));
     }
    }, [authenticationState]);

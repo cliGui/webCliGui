@@ -18,12 +18,16 @@ enum UserMenu {
 
 const doLogout = async (storeState: DataStoreIf) => {
   const { logout } = storeState.authentication;
+  const { authenticationReset } = storeState.authentication;
   const { createTaskReset } = storeState.createTask;
   const { operationStatusReset } = storeState.operationStatus;
 
-  await logout();
-  createTaskReset();
-  operationStatusReset();
+  const fetchStatus = await logout();
+  if (fetchStatus === FetchState.Success) {
+    authenticationReset();
+    createTaskReset();
+    operationStatusReset();
+  }
 };
 
 const Header = () => {

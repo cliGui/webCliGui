@@ -4,6 +4,16 @@ import { DataStoreIf } from '../dataStoreIf';
 import { AuthenticationState, AuthenticationIf } from './authenticationIf';
 import fetchData, { FetchState, FetchStatus, handleFetchStatusAndError, initFetchStatusAndError } from '@store/fetchData';
 
+const REFRESH_ACCESS_TOKEN_TIMEOUT = 1000 * 60 * 55; // 55 minutes
+
+const setupRefreshAccessToken = (get: GetFunction, set: SetFunction) => {
+  clearTimeout(get().authentication.refreshAccessTokenTimeout);
+  const timeout = window.setTimeout(() => doGetAccessToken(get, set), REFRESH_ACCESS_TOKEN_TIMEOUT);
+  set(state => { 
+    state.authentication.refreshAccessTokenTimeout = timeout; 
+  }, false, 'setupRefreshAccessToken');
+}
+
 const doLogin = async (get: GetFunction, set: SetFunction, username: string, password: string): Promise<FetchStatus> => {
   const handleFandE = handleFetchStatusAndError(get, set, ['authentication', 'loginFetchAndError']);
 
@@ -27,7 +37,9 @@ const doLogin = async (get: GetFunction, set: SetFunction, username: string, pas
     }
   );
 
-  if (result === FetchState.Error) {
+  if (result === FetchState.Success) {
+    setupRefreshAccessToken(get, set);
+  } else if (result === FetchState.Error) {
     set(state => { state.authentication.authenticationState = AuthenticationState.AuthenticationFailed; },
         false, 'login_AuthenticationFailed');
   }
@@ -59,9 +71,14 @@ const doGetAccessToken = async (get: GetFunction, set: SetFunction): Promise<Fet
     }
   );
 
-  // Also update authenticationState
-  if (result === FetchState.Error) {
-    set(state => { state.authentication.authenticationState = AuthenticationState.AuthenticationFailed; },
+  if (result === FetchState.Success) {
+    setupRefreshAccessToken(get, set);
+  } else if (result === FetchState.Error) {
+    set(state => { 
+      state.authentication.authenticationState = AuthenticationState.AuthenticationFailed; 
+      state.authentication.accessToken = undefined;
+      state.authentication.refreshAccessTokenTimeout = 0;
+    },
       false, 'getAccessToken_AuthenticationFailed');
   }
 
@@ -88,6 +105,16 @@ const doLogout = async (get: GetFunction, set: SetFunction): Promise<FetchStatus
   });
 };
 
+const doAuthenticationReset = (get: GetFunction, set: SetFunction) => {
+  clearTimeout(get().authentication.refreshAccessTokenTimeout);
+  set(state => { 
+    state.authentication.accessToken = undefined;
+    state.authentication.refreshAccessTokenTimeout = 0; 
+    state.authentication.loginFetchAndError = initFetchStatusAndError('login');
+    state.authentication.getAccessTokenFetchAndError = initFetchStatusAndError('getAccessToken');
+  }, false, 'authenticationReset');
+};
+
 export const authenticationSlice: StateCreator<
   DataStoreIf,
   [['zustand/immer', never], ['zustand/devtools', never]],
@@ -96,6 +123,7 @@ export const authenticationSlice: StateCreator<
 > = (set, get) => ({
   authenticationState: AuthenticationState.Initialize,
   accessToken: undefined,
+  refreshAccessTokenTimeout: 0,
   loginFetchAndError: initFetchStatusAndError('login'),
   getAccessTokenFetchAndError: initFetchStatusAndError('getAccessToken'),
   logoutFetchAndError: initFetchStatusAndError('logout'),
@@ -108,4 +136,5 @@ export const authenticationSlice: StateCreator<
     }, false, 'clearLoginError'),
   getAccessToken: async () => await doGetAccessToken(get, set),
   logout: async () => await doLogout(get, set),
+  authenticationReset: () => doAuthenticationReset(get, set),
 });
