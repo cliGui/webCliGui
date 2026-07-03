@@ -109,7 +109,7 @@ const getFilterLibraryFolders = (get: GetFunction, set: SetFunction) => {
 }
 
 const doGetLibraryOperators = async (get: GetFunction, set: SetFunction) => {
-  const handleFandE = handleFetchStatusAndError(get, set, ['createTask', 'getLibraryOperatorsFetchAndError'], 'getLibraryOperators');
+  const handleFandE = handleFetchStatusAndError(get, set, ['createTask', 'getLibraryOperatorsFetchAndError']);
 
   const setData = (data: OperationFolderJson[]) => {
     const libraryFolders: OperationFolder[] = [];
@@ -222,7 +222,7 @@ const doSetSelectedOperation = async (operationPos: string, get: GetFunction, se
 };
 
 const doGetDescription = async (operationBranch: string[], get: GetFunction, set: SetFunction) => {
-  const handleFandE = handleFetchStatusAndError(get, set, ['createTask', 'getDescriptionFetchAndError'], 'getDescription');
+  const handleFandE = handleFetchStatusAndError(get, set, ['createTask', 'getDescriptionFetchAndError']);
   
   const setData = (data: string) => {
     set(state => {
@@ -243,13 +243,12 @@ const doGetDescription = async (operationBranch: string[], get: GetFunction, set
       handleFandE,
       postData,
       setData,
-      reload: true,
     }
   );
 };
 
 const doLoadParameters = async (get: GetFunction, set: SetFunction) => {
-  const handleFandE = handleFetchStatusAndError(get, set, ['createTask', 'loadParametersFetchAndError'], 'loadParameters');
+  const handleFandE = handleFetchStatusAndError(get, set, ['createTask', 'loadParametersFetchAndError']);
 
   const operationBranch = get().createTask.selectedOperationBranch!;
   const postData: OperationBranchJson = { operationBranch };
@@ -271,7 +270,6 @@ const doLoadParameters = async (get: GetFunction, set: SetFunction) => {
       handleFandE,
       postData,
       setData,
-      reload: true,
     }
   );
 };
@@ -445,7 +443,7 @@ const doGetExecuteCommand = (get: GetFunction) => {
 }
 
 const doSubmitOperation = async (get: GetFunction, set: SetFunction) => {
-  const handleFandE = handleFetchStatusAndError(get, set, ['createTask', 'submitOperationFetchAndError'], 'submitOperation');
+  const handleFandE = handleFetchStatusAndError(get, set, ['createTask', 'submitOperationFetchAndError']);
 
   set(state => { state.createTask.operationStatus = null }, false, 'submitOperation_Init');
 
@@ -477,7 +475,6 @@ const doSubmitOperation = async (get: GetFunction, set: SetFunction) => {
       handleFandE,
       postData,
       setData,
-      reload: true,
     }
   );
 }
@@ -499,10 +496,10 @@ const doCreateTaskReset = async (get: GetFunction, set: SetFunction) => {
     state.createTask.selectedOperationType = OperationType.Pipx;
     state.createTask.selectedOperationBranch = null;
     state.createTask.operationStatus = null;
-    state.createTask.getLibraryOperatorsFetchAndError = initFetchStatusAndError();
-    state.createTask.getDescriptionFetchAndError = initFetchStatusAndError();
-    state.createTask.loadParametersFetchAndError = initFetchStatusAndError();
-    state.createTask.submitOperationFetchAndError = initFetchStatusAndError();
+    state.createTask.getLibraryOperatorsFetchAndError = initFetchStatusAndError('getLibraryOperators');
+    state.createTask.getDescriptionFetchAndError = initFetchStatusAndError('getDescription');
+    state.createTask.loadParametersFetchAndError = initFetchStatusAndError('loadParameters');
+    state.createTask.submitOperationFetchAndError = initFetchStatusAndError('submitOperation');
   }, false, 'createTaskReset');
 };
 
@@ -519,10 +516,10 @@ export const createTaskSlice: StateCreator<
   selectedOperationType: OperationType.Pipx,
   selectedOperationBranch: null,
   operationStatus: null,
-  getLibraryOperatorsFetchAndError: initFetchStatusAndError(),
-  getDescriptionFetchAndError: initFetchStatusAndError(),
-  loadParametersFetchAndError: initFetchStatusAndError(),
-  submitOperationFetchAndError: initFetchStatusAndError(),
+  getLibraryOperatorsFetchAndError: initFetchStatusAndError('getLibraryOperators'),
+  getDescriptionFetchAndError: initFetchStatusAndError('getDescription'),
+  loadParametersFetchAndError: initFetchStatusAndError('loadParameters'),
+  submitOperationFetchAndError: initFetchStatusAndError('submitOperation'),
 
   getLibraryOperators: async () => await doGetLibraryOperators(get, set),
   setSelectedOperationType: (operationType: OperationType) => doSetSelectedOperationType(operationType, get, set),

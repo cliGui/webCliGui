@@ -5,7 +5,7 @@ import { AuthenticationState, AuthenticationIf } from './authenticationIf';
 import fetchData, { FetchState, FetchStatus, handleFetchStatusAndError, initFetchStatusAndError } from '@store/fetchData';
 
 const doLogin = async (get: GetFunction, set: SetFunction, username: string, password: string): Promise<FetchStatus> => {
-  const handleFandE = handleFetchStatusAndError(get, set, ['authentication', 'loginFetchAndError'], 'login');
+  const handleFandE = handleFetchStatusAndError(get, set, ['authentication', 'loginFetchAndError']);
 
   set(state => { state.authentication.authenticationState = AuthenticationState.Authenticating; },
       false, 'login_Authenticating');
@@ -35,7 +35,7 @@ const doLogin = async (get: GetFunction, set: SetFunction, username: string, pas
 };
 
 const doGetAccessToken = async (get: GetFunction, set: SetFunction): Promise<FetchStatus> => {
-  const handleFandE = handleFetchStatusAndError(get, set, ['authentication', 'getAccessTokenFetchAndError'], 'getAccessToken');
+  const handleFandE = handleFetchStatusAndError(get, set, ['authentication', 'getAccessTokenFetchAndError']);
 
   set(state => { state.authentication.authenticationState = AuthenticationState.Authenticating; },
       false, 'getAccessToken_Authenticating');
@@ -56,7 +56,6 @@ const doGetAccessToken = async (get: GetFunction, set: SetFunction): Promise<Fet
     {
       handleFandE,
       setData,
-      reload: true,
     }
   );
 
@@ -70,7 +69,7 @@ const doGetAccessToken = async (get: GetFunction, set: SetFunction): Promise<Fet
 };
 
 const doLogout = async (get: GetFunction, set: SetFunction): Promise<FetchStatus> => {
-  const handleFandE = handleFetchStatusAndError(get, set, ['authentication', 'logoutFetchAndError'], 'logout');
+  const handleFandE = handleFetchStatusAndError(get, set, ['authentication', 'logoutFetchAndError']);
 
   const setData = () => {
     set(state => {
@@ -97,9 +96,9 @@ export const authenticationSlice: StateCreator<
 > = (set, get) => ({
   authenticationState: AuthenticationState.Initialize,
   accessToken: undefined,
-  loginFetchAndError: initFetchStatusAndError(),
-  getAccessTokenFetchAndError: initFetchStatusAndError(),
-  logoutFetchAndError: initFetchStatusAndError(),
+  loginFetchAndError: initFetchStatusAndError('login'),
+  getAccessTokenFetchAndError: initFetchStatusAndError('getAccessToken'),
+  logoutFetchAndError: initFetchStatusAndError('logout'),
 
   login: async (username, password) => await doLogin(get, set, username, password),
   clearLoginError: () => set(state => {

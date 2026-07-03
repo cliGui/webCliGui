@@ -9,6 +9,7 @@ import {
 import WaitAndError from './regalia/WaitAndError';
 import Button from './regalia/Button';
 import { AuthenticationState } from '@store/authentication/authenticationIf';
+import handleOnce from '@utils/handleOnce';
 
 const NUM_COLS = 5;
 const NUM_OPERATION_STATUS_PER_PAGE = 25;
@@ -29,7 +30,7 @@ const RefreshButtons = () => {
 
   const onRefresh = () => {
     const numPages = Math.floor(operationStatusList.length / NUM_OPERATION_STATUS_PER_PAGE) + 1;
-    getOperationStatusList(0, numPages * NUM_OPERATION_STATUS_PER_PAGE, true);
+    getOperationStatusList(0, numPages * NUM_OPERATION_STATUS_PER_PAGE);
   };
 
   useEffect(() => {
@@ -70,7 +71,7 @@ const MoreButton = () => {
   const onMoreClick = () => {
     const numPages = Math.floor(operationStatusList.length / NUM_OPERATION_STATUS_PER_PAGE);
     const nextNumStatus = (numPages + 1) * NUM_OPERATION_STATUS_PER_PAGE;
-    getOperationStatusList(operationStatusList.length, nextNumStatus, true);
+    getOperationStatusList(operationStatusList.length, nextNumStatus);
   };
 
   const isDisabled = authenticationState !== AuthenticationState.Authenticated;
@@ -161,7 +162,7 @@ const Status = () => {
 
    useEffect(() => {
     if (authenticationState === AuthenticationState.Authenticated) {
-      getOperationStatusList(0, NUM_OPERATION_STATUS_PER_PAGE);
+      handleOnce(() => getOperationStatusList(0, NUM_OPERATION_STATUS_PER_PAGE));
     }
    }, [authenticationState]);
 

@@ -6,8 +6,8 @@ import { OperationStatus } from '../types/operationTypes';
 import { OperationStatusListDataJson } from '../types/operationTypesJson';
 import fetchData, { FetchStatus, handleFetchStatusAndError, initFetchStatusAndError } from '@store/fetchData';
 
-const doGetOperationStatusList = async (offset: number, limit: number, reload: boolean | undefined, get: GetFunction, set: SetFunction): Promise<FetchStatus> => {
-  const handleFandE = handleFetchStatusAndError(get, set, ['operationStatus', 'getOperationStatusListFetchAndError'], 'getOperationStatusList');
+const doGetOperationStatusList = async (offset: number, limit: number, get: GetFunction, set: SetFunction): Promise<FetchStatus> => {
+  const handleFandE = handleFetchStatusAndError(get, set, ['operationStatus', 'getOperationStatusListFetchAndError']);
 
   const setData = (rawData: OperationStatusListDataJson) => {
     const newOperationStatusList = [...get().operationStatus.operationStatusList];
@@ -39,7 +39,6 @@ const doGetOperationStatusList = async (offset: number, limit: number, reload: b
       accessToken,
       handleFandE,
       setData,
-      reload: true,
     }
   );
 };
@@ -56,7 +55,7 @@ const doOperationStatusReset = async (get: GetFunction, set: SetFunction) => {
   set(state => {
     state.operationStatus.operationStatusList = [];
     state.operationStatus.totalNumOperationStatus = 0;
-    state.operationStatus.getOperationStatusListFetchAndError = initFetchStatusAndError();
+    state.operationStatus.getOperationStatusListFetchAndError = initFetchStatusAndError('getOperationStatusList');
     state.operationStatus.isAutomaticRefresh = false;
   }, false, 'operationStatusReset');
 }
@@ -69,12 +68,12 @@ export const operationStatusSlice: StateCreator<
 > = (set, get) => ({
   operationStatusList: [],
   totalNumOperationStatus: 0,
-  getOperationStatusListFetchAndError: initFetchStatusAndError(),
+  getOperationStatusListFetchAndError: initFetchStatusAndError('getOperationStatusList'),
   isAutomaticRefresh: false,
   automaticRefreshTimer: -1,
 
-  getOperationStatusList: async (offset: number, limit: number, reload?: boolean): Promise<FetchStatus> => 
-    doGetOperationStatusList(offset, limit, reload, get, set),
+  getOperationStatusList: async (offset: number, limit: number): Promise<FetchStatus> => 
+    doGetOperationStatusList(offset, limit, get, set),
   toggleAutomaticRefresh: () => doToggleAutomaticRefresh(get, set),
   setAutomaticRefreshTimer: (timer: number) => set(state => { state.operationStatus.automaticRefreshTimer = timer }, false,
                                                   "setAutomaticRefreshTimer"),

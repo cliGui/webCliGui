@@ -8,7 +8,7 @@ export interface OperationStatusIf {
   isAutomaticRefresh: boolean;
   automaticRefreshTimer: number;
   
-  getOperationStatusList: (offset: number, limit: number, reload?: boolean) => Promise<FetchStatus>;
+  getOperationStatusList: (offset: number, limit: number) => Promise<FetchStatus>;
   toggleAutomaticRefresh: () => void;
   setAutomaticRefreshTimer: (timer: number) => void;
   operationStatusReset: () => void;

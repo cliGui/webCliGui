@@ -6,6 +6,7 @@ import {
 import { useDataStore } from "@store/dataStore";
 import { FetchState } from "@store/fetchData";
 import WaitAndError from "../regalia/WaitAndError";
+import handleOnce from "@utils/handleOnce";
 
 interface ToggleParameterProps {
   parameterBranch: number[];
@@ -169,7 +170,7 @@ const OperationParameters = () => {
 
   useEffect(() => {
     if (selectedOperation && !selectedOperation.parameters) {
-      loadParameters();
+      handleOnce(loadParameters);
     }
   }, [selectedOperation]);
 

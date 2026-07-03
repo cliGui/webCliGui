@@ -87,32 +87,33 @@ export interface FetchStatusAndError {
   errorDetail: string | null;
   abortController: AbortController | null;
   abort: () => Promise<void>;
+  intent: string;
 }
 
-const abortFetch = async (abortController: AbortController | null) => {
+const abortFetch = async (abortController: AbortController | null, intent: string) => {
   if (abortController) {
     abortController.abort(new Error('Interupted'));
     await sleep();  // Skip the current render cycle
   }
 }
 
-export const initFetchStatusAndError = () => ({
+export const initFetchStatusAndError = (intent: string) => ({
   fetchStatus: FetchState.Idle,
   error: null,
   errorDetail: null,
   abortController: null,
-  abort: async function() { await abortFetch(this.abortController) },
+  abort: async function() { await abortFetch(this.abortController, this.intent) },
+  intent,
 });
 
 export interface HandleFetchStatusAndError {
   get: GetFunction;
   set: SetFunction;
   fAndEDesignator: string[];
-  intent: string;
 }
 
-export const handleFetchStatusAndError = (get: GetFunction, set: SetFunction, fAndEDesignator: string[], intent: string) =>
-  ({ get, set, fAndEDesignator, intent } as HandleFetchStatusAndError);
+export const handleFetchStatusAndError = (get: GetFunction, set: SetFunction, fAndEDesignator: string[]) =>
+  ({ get, set, fAndEDesignator } as HandleFetchStatusAndError);
 
 const getFAndE = (handleFAndE: HandleFetchStatusAndError) => {
   const sAndE = handleFAndE.fAndEDesignator.reduce((obj: any, designator: string) => obj[designator], handleFAndE.get()) as FetchStatusAndError;
@@ -129,7 +130,7 @@ const setFandE = (updatedSAndE: FetchStatusAndError, handleFandE: HandleFetchSta
       fAndEHolder[fAndEDesignator] = updatedSAndE;
     },
     false, 
-    `${handleFandE.intent}_${fetchStatus}`
+    `${updatedSAndE.intent}_${fetchStatus}`
   );
 
 export interface FetchDataOptions<D, P = void> {
@@ -138,18 +139,18 @@ export interface FetchDataOptions<D, P = void> {
   searchParameters?: {[key: string]: string | number | undefined}[],
   setData?: (data: D) => void;
   postData?: P;
-  reload?: boolean;
+  loadOnce?: boolean;
 }
 
 const fetchData = async <D, P = void>(url: string, options: FetchDataOptions<D, P>): Promise<FetchStatus> => {
   let fAndE = getFAndE(options.handleFandE);
-  if (!options.reload && fAndE.fetchStatus === FetchState.Success) {
+  if (options.loadOnce && fAndE.fetchStatus === FetchState.Success) {
     return fAndE.fetchStatus;
   }
 
   try {
   // Abort previous running fetch
-  await abortFetch(fAndE.abortController);
+  await abortFetch(fAndE.abortController, fAndE.intent);
 
   fAndE = getFAndE(options.handleFandE);
   fAndE = {
