@@ -180,13 +180,14 @@ const OperationParameters = () => {
 
   return (
     <>
+      <WaitAndError fetchAndError={loadParametersFetchAndError} />
+
       <div className="grid grid-cols-[50px_175px_225px_auto] gap-2 items-center">
         <div className="justify-self-center">Select</div>
         <div>Parameter</div>
         <div>Value</div>
         <div>Description</div>
 
-        <WaitAndError fetchAndError={loadParametersFetchAndError} />
         {!!selectedOperation.parameters && <Parameter parameter={selectedOperation.parameters} parameterBranch={[]} />}
       </div>
 
