@@ -1,16 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ListGroup, Tab, Tabs } from 'react-bootstrap';
+import handleOnce from '@utils/handleOnce';
+import useClickOutside from '@utils/useClickOutside';
 import { useDataStore } from '@store/dataStore';
+import { DataStoreIf } from '@store/dataStoreIf';
+import { AuthenticationState } from '@store/authentication/authenticationIf';
+import { FetchState } from '@store/fetchData';
 import FaceIcon from '@icons/face-man-outline.svg';
+import ErrorMessage from './regalia/ErrorMessage';
+import WaitCircle from './regalia/WaitCircle';
 import Authenticate from './Authenticate';
 import CreateTask from './CreateTask';
 import Status from './Status';
-import ErrorMessage from './regalia/ErrorMessage';
-import { AuthenticationState } from '@store/authentication/authenticationIf';
-import { FetchState } from '@store/fetchData';
-import WaitCircle from './regalia/WaitCircle';
-import handleOnce from '@utils/handleOnce';
-import { DataStoreIf } from '@store/dataStoreIf';
 
 enum UserMenu {
   LOGOUT = 'Logout',
@@ -23,24 +24,30 @@ const doLogout = async (storeState: DataStoreIf) => {
   const { operationStatusReset } = storeState.operationStatus;
 
   const fetchStatus = await logout();
-  if (fetchStatus === FetchState.Success) {
-    authenticationReset();
-    createTaskReset();
-    operationStatusReset();
+  if (fetchStatus !== FetchState.Success) {
+    return false;
   }
+
+  authenticationReset();
+  createTaskReset();
+  operationStatusReset();
+  return true;  
 };
 
 const Header = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const storeState = useDataStore(state => state);
   const { logoutFetchAndError } = storeState.authentication;
 
   const logoutDisabled = logoutFetchAndError.fetchStatus === FetchState.Loading;
 
+  useClickOutside(menuRef, () => setShowUserMenu(false));
+
   const handleUserMenu = async (value: string) => {
     switch (value) {
       case UserMenu.LOGOUT:
-        doLogout(storeState);
+        await doLogout(storeState);
         setShowUserMenu(false);
         break;
 
@@ -64,15 +71,17 @@ const Header = () => {
         </button>
         
         {showUserMenu &&
-          <ListGroup className="absolute top-[33px] right-0 left-15 cursor-pointer">
-            <ListGroup.Item onClick={onLogoutClick}>
-              <div className="flex items-center h-5">
-                <span className={`mr-3 ${logoutDisabled ? 'text-gray-300' : ''}`}>Logout</span>
-                {logoutFetchAndError.fetchStatus === FetchState.Loading &&
+          <div ref={menuRef} className="absolute top-[33px] right-0 left-15 cursor-pointer">
+            <ListGroup>
+              <ListGroup.Item onClick={onLogoutClick}>
+                <div className="flex items-center h-5">
+                  <span className={`mr-3 ${logoutDisabled ? 'text-gray-300' : ''}`}>Logout</span>
+                  {logoutFetchAndError.fetchStatus === FetchState.Loading &&
                     <WaitCircle className="h-4! w-4!" />}
-              </div>
-            </ListGroup.Item>
-          </ListGroup>
+                </div>
+              </ListGroup.Item>
+            </ListGroup>
+          </div>
         }
       </div>
     </div>

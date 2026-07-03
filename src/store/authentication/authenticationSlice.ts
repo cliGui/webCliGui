@@ -112,6 +112,7 @@ const doAuthenticationReset = (get: GetFunction, set: SetFunction) => {
     state.authentication.refreshAccessTokenTimeout = 0; 
     state.authentication.loginFetchAndError = initFetchStatusAndError('login');
     state.authentication.getAccessTokenFetchAndError = initFetchStatusAndError('getAccessToken');
+    state.authentication.logoutFetchAndError = initFetchStatusAndError('logout');
   }, false, 'authenticationReset');
 };
 

@@ -5,12 +5,18 @@ import ErrorMessage from "./ErrorMessage";
 
 export interface WaitAndErrorProps {
   fetchAndError: FetchStatusAndError;
+  classNameWait?: string;
+  classNameError?: string;
 }
 
-const WaitAndError = ({fetchAndError}: WaitAndErrorProps) => (
+const WaitAndError = ({
+    fetchAndError,
+    classNameWait,
+    classNameError,
+  }: WaitAndErrorProps) => (
   <div className="flex">
-    {fetchAndError.fetchStatus === FetchState.Loading && <WaitCircle />}
-    <ErrorMessage fetchAndError={fetchAndError} />
+    {fetchAndError.fetchStatus === FetchState.Loading && <WaitCircle className={classNameWait} />}
+    <ErrorMessage fetchAndError={fetchAndError} className={classNameError} />
   </div>
 );
 
