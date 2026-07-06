@@ -13,6 +13,7 @@ export interface FileData {
 export interface FolderIf {
   folderData: FolderData | null;
   fileData: FileData | null;
+  
   getFolderDataFetchAndError: FetchStatusAndError;
 
   openFolder: (path: string) => Promise<FetchStatus>;

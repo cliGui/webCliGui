@@ -4,9 +4,10 @@ import { OperationStatus } from "../types/operationTypes";
 export interface OperationStatusIf {
   operationStatusList: OperationStatus[];
   totalNumOperationStatus: number;
-  getOperationStatusListFetchAndError: FetchStatusAndError;
   isAutomaticRefresh: boolean;
   automaticRefreshTimer: number;
+
+  getOperationStatusListFetchAndError: FetchStatusAndError;
   
   getOperationStatusList: (offset: number, limit: number) => Promise<FetchStatus>;
   toggleAutomaticRefresh: () => void;

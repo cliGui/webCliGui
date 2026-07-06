@@ -12,6 +12,7 @@ export interface AuthenticationIf {
   authenticationState: AuthenticationState;
   accessToken: string | undefined;
   refreshAccessTokenTimeout: number;
+  
   loginFetchAndError: FetchStatusAndError;
   getAccessTokenFetchAndError: FetchStatusAndError;
   logoutFetchAndError: FetchStatusAndError;

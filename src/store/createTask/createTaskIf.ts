@@ -25,6 +25,7 @@ export interface CreateTaskIf {
   selectedOperationType: OperationType;
   selectedOperationBranch: string[] | null;
   operationStatus: OperationStatus | null;
+  
   getLibraryOperatorsFetchAndError: FetchStatusAndError;
   getDescriptionFetchAndError: FetchStatusAndError;
   loadParametersFetchAndError: FetchStatusAndError;
