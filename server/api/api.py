@@ -290,17 +290,17 @@ def folder_access(request, path):
     if os.path.isfile(full_path):
       with open(full_path, "r") as f:
         content = f.read()
-      return HttpResponse(f"<pre>{escape(content)}</pre>")
+      return JsonResponse({
+        'type': 'file',
+        'content': content,
+      })
     
-    file_list = []
-    files = os.listdir(full_path)
-    for name in files:
-        file_path = os.path.join(path, name)
-        file_list.append(f'<li><a href="{file_path}">{name}</a></li>')
-
-    folder_page = f'<h3 style="margin: 25px; font-weight: 500">Folder {path}</h3>\n';
-    folder_page += "<ul>" + "".join(file_list) + "</ul>"
-    return HttpResponse(folder_page)
+    file_list = os.listdir(full_path)
+    return JsonResponse({
+      'type': 'directory',
+      'path': path,
+      'file_list': file_list,
+    })
   
   except Exception as exc:
      print('folder_access(), exception:', exc)

@@ -115,6 +115,12 @@ const StatusTable = () => {
     operationStatusList,
     getOperationStatusListFetchAndError,
    } = useDataStore(state => state.operationStatus);
+  const { openFolder } = useDataStore(state => state.folder);
+
+  const onOpenFolder = (evt: React.MouseEvent<HTMLAnchorElement>, dir: string) => {
+    evt.preventDefault();
+    openFolder(dir);
+  }
 
   return (
     <table className={TABLE_CLASSNAME}>
@@ -135,7 +141,7 @@ const StatusTable = () => {
             <td className={`${TD_CLASSNAME} ${ELAPSED_TIME_CLASSNAME}`} data-label="Elapsed time">{elapsedTimeStr(stat.elapsedTime)}</td>
             <td className={`${TD_CLASSNAME} ${STATUS_CLASSNAME}`} data-label="Status">{stat.status}</td>
             <td className={`${TD_CLASSNAME} ${FOLDER_CLASSNAME}`} data-label="Folder">
-              <a href={`/api/folder-access/${stat.folder}`} target="_blank" rel="noopener noreferrer">
+              <a href={`/api/folder-access/${stat.folder}`} onClick={evt => onOpenFolder(evt, stat.folder)}>
                 {stat.folder}
               </a>
             </td>

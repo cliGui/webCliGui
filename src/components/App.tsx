@@ -5,6 +5,7 @@ import useClickOutside from '@utils/useClickOutside';
 import { useDataStore } from '@store/dataStore';
 import { DataStoreIf } from '@store/dataStoreIf';
 import { AuthenticationState } from '@store/authentication/authenticationIf';
+import { Screen, TabKey } from '@store/screen/screenSelectionIf';
 import { FetchState } from '@store/fetchData';
 import FaceIcon from '@icons/face-man-outline.svg';
 import ErrorMessage from './regalia/ErrorMessage';
@@ -12,6 +13,7 @@ import WaitCircle from './regalia/WaitCircle';
 import Authenticate from './Authenticate';
 import CreateTask from './CreateTask';
 import Status from './Status';
+import FolderView from './FolderView';
 
 enum UserMenu {
   LOGOUT = 'Logout',
@@ -20,8 +22,10 @@ enum UserMenu {
 const doLogout = async (storeState: DataStoreIf) => {
   const { logout } = storeState.authentication;
   const { authenticationReset } = storeState.authentication;
+  const { screenSelectionReset } = storeState.screenSelection;
   const { createTaskReset } = storeState.createTask;
   const { operationStatusReset } = storeState.operationStatus;
+  const { folderReset } = storeState.folder;
 
   const fetchStatus = await logout();
   if (fetchStatus !== FetchState.Success) {
@@ -29,9 +33,11 @@ const doLogout = async (storeState: DataStoreIf) => {
   }
 
   authenticationReset();
+  screenSelectionReset();
   createTaskReset();
   operationStatusReset();
-  return true;  
+  folderReset();
+  return true;
 };
 
 const Header = () => {
@@ -89,20 +95,20 @@ const Header = () => {
 };
 
 const TabsContainer = () => {
-  const [selectedTabKey, setSelectedTabKey] = useState('createTask');
+  const { selectedTabKey, setSelectedTabKey } = useDataStore(state => state.screenSelection);
 
   return (
-    <Tabs defaultActiveKey="createTask" 
+    <Tabs defaultActiveKey={TabKey.CreateTask}
         mountOnEnter
         activeKey={selectedTabKey}
-        onSelect={(tab: string | null) => setSelectedTabKey(tab as string)}
+        onSelect={(tab: string | null) => setSelectedTabKey(tab as TabKey)}
         className="mb-3 container-tabs">
 
-      <Tab eventKey="createTask" title="Create task">
+      <Tab eventKey={TabKey.CreateTask} title="Create task">
         <CreateTask />
       </Tab>
 
-      <Tab eventKey="status" title="Status">
+      <Tab eventKey={TabKey.Status} title="Status">
         <Status />
       </Tab>
     </Tabs>
@@ -111,6 +117,7 @@ const TabsContainer = () => {
 
 const App  = () => {
   const { authenticationState, getAccessToken } = useDataStore(state => state.authentication);
+  const { screen } = useDataStore(state => state.screenSelection);
 
   useEffect(() => {
     const closeHandleOnce = handleOnce(getAccessToken);
@@ -121,7 +128,8 @@ const App  = () => {
     <>
       <div className="flex flex-col p-5 pt-3 pb-3 max-w-[1325px]">
         <Header />
-        <TabsContainer />
+        {screen === Screen.TABS && <TabsContainer />}
+        {screen === Screen.FOLDER && <FolderView />}
       </div>
 
       {authenticationState !== AuthenticationState.Authenticated &&
